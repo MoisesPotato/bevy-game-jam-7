@@ -6,6 +6,8 @@ use crate::{asset_tracking::ResourceHandles, menus::Menu, screens::Screen, theme
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Menu::Main), spawn_main_menu);
+    #[cfg(feature = "dev")]
+    app.add_systems(OnEnter(Menu::Main), start_already);
 }
 
 fn spawn_main_menu(mut commands: Commands) {
@@ -29,8 +31,7 @@ fn spawn_main_menu(mut commands: Commands) {
     ));
 }
 
-fn enter_loading_or_gameplay_screen(
-    _: On<Pointer<Click>>,
+fn start_already(
     resource_handles: Res<ResourceHandles>,
     mut next_screen: ResMut<NextState<Screen>>,
 ) {
@@ -39,6 +40,14 @@ fn enter_loading_or_gameplay_screen(
     } else {
         next_screen.set(Screen::Loading);
     }
+}
+
+fn enter_loading_or_gameplay_screen(
+    _: On<Pointer<Click>>,
+    resource_handles: Res<ResourceHandles>,
+    next_screen: ResMut<NextState<Screen>>,
+) {
+    start_already(resource_handles, next_screen);
 }
 
 fn open_settings_menu(_: On<Pointer<Click>>, mut next_menu: ResMut<NextState<Menu>>) {
