@@ -1,9 +1,12 @@
 //! Player-specific behavior.
 
+use std::f32::consts::PI;
+
 use bevy::{
     image::{ImageLoaderSettings, ImageSampler},
     prelude::*,
 };
+use rand::{Rng, rng};
 
 use crate::{
     AppSystems, PausableSystems,
@@ -26,8 +29,7 @@ pub(super) fn plugin(app: &mut App) {
     );
 }
 
-/// The player character.
-pub fn player(
+pub fn sheep(
     max_speed: f32,
     player_assets: &PlayerAssets,
     texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
@@ -38,9 +40,14 @@ pub fn player(
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
     let player_animation = PlayerAnimation::new();
 
+    let mut rng = rng();
+    let angle = 2. * PI * rng.random::<f32>();
+    let distance = 200. * (1. - rng.random::<f32>().powi(2));
+
     (
-        Name::new("Player"),
-        Player,
+        Name::new("Sheep"),
+        Sheep,
+        // Player,
         Sprite::from_atlas_image(
             player_assets.ducky.clone(),
             TextureAtlas {
@@ -48,7 +55,11 @@ pub fn player(
                 index: player_animation.get_atlas_index(),
             },
         ),
-        Transform::from_scale(Vec2::splat(8.0).extend(1.0)),
+        Transform {
+            translation: (distance * Vec2::from_angle(angle)).extend(0.),
+            rotation: Quat::IDENTITY,
+            scale: Vec2::splat(2.).extend(1.),
+        },
         MovementController {
             max_speed,
             ..default()
@@ -61,6 +72,10 @@ pub fn player(
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
 #[reflect(Component)]
 struct Player;
+
+#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
+#[reflect(Component)]
+struct Sheep;
 
 fn record_player_directional_input(
     input: Res<ButtonInput<KeyCode>>,

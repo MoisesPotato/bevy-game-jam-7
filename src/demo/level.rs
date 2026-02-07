@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::{
     asset_tracking::LoadResource,
     audio::music,
-    demo::player::{PlayerAssets, player},
+    demo::player::{PlayerAssets, sheep},
     screens::Screen,
 };
 
@@ -29,6 +29,8 @@ impl FromWorld for LevelAssets {
     }
 }
 
+const N_SHEEP: u8 = 50;
+
 /// A system that spawns the main level.
 pub fn spawn_level(
     mut commands: Commands,
@@ -36,17 +38,23 @@ pub fn spawn_level(
     player_assets: Res<PlayerAssets>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    commands.spawn((
-        Name::new("Level"),
-        Transform::default(),
-        Visibility::default(),
-        DespawnOnExit(Screen::Gameplay),
-        children![
-            player(400.0, &player_assets, &mut texture_atlas_layouts),
-            (
+    let level = commands
+        .spawn((
+            Name::new("Level"),
+            Transform::default(),
+            Visibility::default(),
+            DespawnOnExit(Screen::Gameplay),
+            children![(
                 Name::new("Gameplay Music"),
                 music(level_assets.music.clone())
-            )
-        ],
-    ));
+            )],
+        ))
+        .id();
+
+    for _ in 0..N_SHEEP {
+        commands.spawn((
+            sheep(400.0, &player_assets, &mut texture_atlas_layouts),
+            ChildOf(level),
+        ));
+    }
 }
