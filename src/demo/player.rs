@@ -30,7 +30,6 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 pub fn sheep(
-    max_speed: f32,
     player_assets: &PlayerAssets,
     texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
 ) -> impl Bundle {
@@ -60,22 +59,37 @@ pub fn sheep(
             rotation: Quat::IDENTITY,
             scale: Vec2::splat(2.).extend(1.),
         },
-        MovementController {
-            max_speed,
-            ..default()
-        },
         ScreenWrap,
         player_animation,
     )
 }
 
-#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
-#[reflect(Component)]
-struct Player;
+pub fn choose(mut commands: Commands, sheep: Query<Entity, With<Sheep>>) {
+    let mut count = 0;
+    for id in sheep {
+        commands.entity(id).remove::<(Player, MovementController)>();
+        count += 1;
+    }
+
+    let new_player = rng().random_range(0..count);
+
+    let Some(id) = sheep.iter().nth(new_player) else {
+        error!("Sheep somehow disappeared?");
+        return;
+    };
+
+    commands
+        .entity(id)
+        .insert((Player, MovementController::default()));
+}
 
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
 #[reflect(Component)]
-struct Sheep;
+pub struct Player;
+
+#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
+#[reflect(Component)]
+pub struct Sheep;
 
 fn record_player_directional_input(
     input: Res<ButtonInput<KeyCode>>,

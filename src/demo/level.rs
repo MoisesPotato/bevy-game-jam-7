@@ -53,7 +53,7 @@ pub fn spawn_level(
 
     for _ in 0..N_SHEEP {
         commands.spawn((
-            sheep(400.0, &player_assets, &mut texture_atlas_layouts),
+            sheep(&player_assets, &mut texture_atlas_layouts),
             ChildOf(level),
         ));
     }
