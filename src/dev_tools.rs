@@ -6,7 +6,7 @@ use bevy::{
 
 use crate::screens::Screen;
 
-pub(super) fn plugin(app: &mut App) {
+pub fn plugin(app: &mut App) {
     // Log `Screen` state transitions.
     app.add_systems(Update, log_transitions::<Screen>);
 

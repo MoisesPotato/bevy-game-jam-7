@@ -14,6 +14,6 @@ pub mod prelude {
 
 use bevy::prelude::*;
 
-pub(super) fn plugin(app: &mut App) {
+pub fn plugin(app: &mut App) {
     app.add_plugins(interaction::plugin);
 }

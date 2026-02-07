@@ -2,6 +2,8 @@
 #![cfg_attr(bevy_lint, feature(register_tool), register_tool(bevy))]
 // Disable console on Windows for non-dev builds.
 #![cfg_attr(not(feature = "dev"), windows_subsystem = "windows")]
+#![warn(clippy::pedantic, clippy::nursery)]
+#![allow(clippy::needless_pass_by_value, clippy::suboptimal_flops)]
 
 mod asset_tracking;
 mod audio;

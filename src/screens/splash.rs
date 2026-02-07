@@ -108,7 +108,7 @@ fn tick_fade_in_out(time: Res<Time>, mut animation_query: Query<&mut ImageNodeFa
 
 fn apply_fade_in_out(mut animation_query: Query<(&ImageNodeFadeInOut, &mut ImageNode)>) {
     for (anim, mut image) in &mut animation_query {
-        image.color.set_alpha(anim.alpha())
+        image.color.set_alpha(anim.alpha());
     }
 }
 
