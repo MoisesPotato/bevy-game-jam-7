@@ -1,19 +1,28 @@
-use std::f32::consts::PI;
+use std::{f32::consts::PI, time::Duration};
 
 use bevy::prelude::*;
 use rand::{Rng, rng};
 
 use crate::{
     AppSystems, PausableSystems,
-    demo::{animation::PlayerAnimation, movement::ScreenWrap, player::PlayerAssets},
+    demo::{
+        animation::PlayerAnimation,
+        movement::ScreenWrap,
+        player::{Player, PlayerAssets},
+    },
 };
 
 pub fn plugin(app: &mut App) {
     app.add_systems(
         Update,
-        (think, walk)
+        think
+            // .run_if(on_timer(Duration::from_millis(500)))
             .in_set(AppSystems::Update)
             .in_set(PausableSystems),
+    );
+    app.add_systems(
+        Update,
+        walk.in_set(AppSystems::Update).in_set(PausableSystems),
     );
 }
 
@@ -27,27 +36,32 @@ pub struct SheepMind {
     neighbor_count: u8,
     goal: Vec2,
     speed: f32,
+    time_to_think: Timer,
 }
 
-impl Default for SheepMind {
-    fn default() -> Self {
-        Self {
-            neighbor_count: 0,
-            goal: Vec2::ZERO,
-            speed: 100.,
-        }
-    }
-}
+const MIND_CAPACITY: u8 = 100;
 
 impl SheepMind {
     fn add_goal(&mut self, vec: Vec2) {
         if self.neighbor_count == 0 {
             self.goal = vec;
             self.neighbor_count = 1;
-        } else {
+        } else if self.neighbor_count < MIND_CAPACITY {
             let n = f32::from(self.neighbor_count);
             self.goal = (self.goal * n + vec) / (n + 1.);
             self.neighbor_count += 1;
+        }
+    }
+
+    fn new() -> Self {
+        Self {
+            neighbor_count: 0,
+            goal: Vec2::ZERO,
+            speed: 100.,
+            time_to_think: Timer::new(
+                Duration::from_millis(rng().random_range(400..600)),
+                TimerMode::Repeating,
+            ),
         }
     }
 }
@@ -65,7 +79,7 @@ pub fn sheep(player_assets: &PlayerAssets) -> impl Bundle {
     (
         Name::new("Sheep"),
         Sheep,
-        SheepMind::default(),
+        SheepMind::new(),
         Sprite::from_image(player_assets.sheep.clone()),
         Transform {
             translation: pos.extend(0.),
@@ -77,25 +91,43 @@ pub fn sheep(player_assets: &PlayerAssets) -> impl Bundle {
     )
 }
 
-const RANGE: f32 = 40.;
+const RANGE: f32 = 100.;
+const AVOID_RANGE: f32 = 40.;
 
-fn think(mut sheep: Query<(&Transform, &mut SheepMind)>) {
+fn think(mut sheep: Query<(&Transform, &mut SheepMind)>, time: Res<Time>) {
     for (_, mut mind) in &mut sheep {
-        *mind = SheepMind::default();
+        mind.time_to_think.tick(time.delta());
+        if mind.time_to_think.just_finished() {
+            mind.goal = Vec2::ZERO;
+            mind.neighbor_count = 0;
+        }
     }
+
     let mut combo = sheep.iter_combinations_mut::<2>();
     while let Some([(trans1, mut mind1), (trans2, mut mind2)]) = combo.fetch_next() {
         let vec = (trans1.translation - trans2.translation).xy();
-        if vec.length() > RANGE {
+        let dist = vec.length();
+        if dist > RANGE {
             continue;
         }
 
-        mind1.add_goal(-vec);
-        mind2.add_goal(vec);
+        let avoid_factor = if dist < AVOID_RANGE {
+            -AVOID_RANGE / dist
+        } else {
+            1.
+        };
+
+        if mind1.time_to_think.just_finished() {
+            mind1.add_goal(-avoid_factor * vec);
+        }
+
+        if mind2.time_to_think.just_finished() {
+            mind2.add_goal(avoid_factor * vec);
+        }
     }
 }
 
-fn walk(sheep: Query<(&mut Transform, &SheepMind)>, time: Res<Time>) {
+fn walk(sheep: Query<(&mut Transform, &SheepMind), Without<Player>>, time: Res<Time>) {
     for (mut transf, mind) in sheep {
         let goal = mind.speed * mind.goal.normalize_or_zero().extend(0.);
         transf.translation += time.delta_secs() * goal;
