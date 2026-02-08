@@ -1,5 +1,6 @@
 use std::{
     cmp::{Ordering, min},
+    collections::{HashMap, hash_map::Entry},
     f32::consts::PI,
     time::Duration,
 };
@@ -19,14 +20,10 @@ use crate::{
 pub fn plugin(app: &mut App) {
     app.add_systems(
         Update,
-        think
-            // .run_if(on_timer(Duration::from_millis(500)))
+        (collision, think, walk)
+            .chain()
             .in_set(AppSystems::Update)
             .in_set(PausableSystems),
-    );
-    app.add_systems(
-        Update,
-        walk.in_set(AppSystems::Update).in_set(PausableSystems),
     );
 }
 
@@ -64,8 +61,6 @@ impl State {
     }
 
     fn conclude_from_observation(&mut self) {
-        const COLLISION_DISTANCE: f32 = 20.;
-
         let Self::Obseerving { neighbors } = self else {
             return;
         };
@@ -93,14 +88,14 @@ impl State {
         if neighbors[0].length() < COLLISION_DISTANCE {
             *self = Self::Moving {
                 goal: -neighbors[0],
-                speed: 200.,
+                speed: 150.,
             };
         } else {
             let goal = neighbors
                 .iter()
                 .map(|v| {
                     if v.length() <= AVOID_RANGE {
-                        -v * 2.
+                        -v * 0.5
                     } else {
                         *v
                     }
@@ -132,7 +127,7 @@ pub fn sheep(player_assets: &PlayerAssets) -> impl Bundle {
 
     let mut rng = rng();
     let angle = 2. * PI * rng.random::<f32>();
-    let distance = 200. * (1. - rng.random::<f32>().powi(2));
+    let distance = 250. * (1. - rng.random::<f32>().powi(2));
     let pos = distance * Vec2::from_angle(angle);
 
     (
@@ -150,8 +145,47 @@ pub fn sheep(player_assets: &PlayerAssets) -> impl Bundle {
     )
 }
 
-const RANGE: f32 = 100.;
-const AVOID_RANGE: f32 = 40.;
+const RANGE: f32 = 300.;
+const AVOID_RANGE: f32 = 100.;
+const COLLISION_DISTANCE: f32 = 50.;
+
+fn collision(
+    mut sheep: Query<(Entity, &mut Transform), With<Sheep>>,
+    mut distances: Local<HashMap<Entity, Vec2>>,
+) {
+    distances.clear();
+
+    let mut combinations = sheep.iter_combinations_mut::<2>();
+    while let Some([(id1, trans1), (id2, trans2)]) = combinations.fetch_next() {
+        let vec = (trans1.translation - trans2.translation).xy();
+        let dist = vec.length();
+
+        if dist >= COLLISION_DISTANCE {
+            continue;
+        }
+
+        for (id, vec) in [(id1, vec), (id2, -vec)] {
+            match distances.entry(id) {
+                Entry::Occupied(mut entry) => {
+                    if dist < entry.get().length() {
+                        entry.insert(vec);
+                    }
+                }
+                Entry::Vacant(entry) => {
+                    entry.insert(vec);
+                }
+            }
+        }
+    }
+
+    for (id, mut transf) in sheep {
+        let Some(vec) = distances.get(&id) else {
+            continue;
+        };
+        let need_dist = COLLISION_DISTANCE - vec.length();
+        transf.translation += (need_dist * vec.normalize_or_zero()).extend(0.);
+    }
+}
 
 fn think(mut sheep: Query<(&Transform, &mut SheepMind)>, time: Res<Time>) {
     for (_, mut mind) in &mut sheep {
