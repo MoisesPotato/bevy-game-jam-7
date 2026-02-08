@@ -1,7 +1,5 @@
 //! Player-specific behavior.
 
-use std::f32::consts::PI;
-
 use bevy::{
     image::{ImageLoaderSettings, ImageSampler},
     prelude::*,
@@ -11,10 +9,7 @@ use rand::{Rng, rng};
 use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
-    demo::{
-        animation::PlayerAnimation,
-        movement::{MovementController, ScreenWrap},
-    },
+    demo::{movement::MovementController, sheep::Sheep},
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -27,30 +22,6 @@ pub(super) fn plugin(app: &mut App) {
             .in_set(AppSystems::RecordInput)
             .in_set(PausableSystems),
     );
-}
-
-pub fn sheep(player_assets: &PlayerAssets) -> impl Bundle {
-    // A texture atlas is a way to split a single image into a grid of related images.
-    // You can learn more in this example: https://github.com/bevyengine/bevy/blob/latest/examples/2d/texture_atlas.rs
-    let player_animation = PlayerAnimation::new();
-
-    let mut rng = rng();
-    let angle = 2. * PI * rng.random::<f32>();
-    let distance = 200. * (1. - rng.random::<f32>().powi(2));
-
-    (
-        Name::new("Sheep"),
-        Sheep,
-        // Player,
-        Sprite::from_image(player_assets.sheep.clone()),
-        Transform {
-            translation: (distance * Vec2::from_angle(angle)).extend(0.),
-            rotation: Quat::IDENTITY,
-            scale: Vec2::splat(2.).extend(1.),
-        },
-        ScreenWrap,
-        player_animation,
-    )
 }
 
 pub fn choose(mut commands: Commands, sheep: Query<Entity, With<Sheep>>) {
@@ -75,10 +46,6 @@ pub fn choose(mut commands: Commands, sheep: Query<Entity, With<Sheep>>) {
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
 #[reflect(Component)]
 pub struct Player;
-
-#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
-#[reflect(Component)]
-pub struct Sheep;
 
 fn record_player_directional_input(
     input: Res<ButtonInput<KeyCode>>,
@@ -113,7 +80,7 @@ fn record_player_directional_input(
 #[reflect(Resource)]
 pub struct PlayerAssets {
     #[dependency]
-    sheep: Handle<Image>,
+    pub sheep: Handle<Image>,
     #[dependency]
     pub steps: Vec<Handle<AudioSource>>,
 }

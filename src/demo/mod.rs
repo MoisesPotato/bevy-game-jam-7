@@ -9,6 +9,7 @@ mod animation;
 pub mod level;
 mod movement;
 pub mod player;
+pub mod sheep;
 
 pub fn plugin(app: &mut App) {
     app.add_plugins((
@@ -16,5 +17,6 @@ pub fn plugin(app: &mut App) {
         level::plugin,
         movement::plugin,
         player::plugin,
+        sheep::plugin,
     ));
 }
