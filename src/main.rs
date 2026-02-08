@@ -3,7 +3,11 @@
 // Disable console on Windows for non-dev builds.
 #![cfg_attr(not(feature = "dev"), windows_subsystem = "windows")]
 #![warn(clippy::pedantic, clippy::nursery)]
-#![allow(clippy::needless_pass_by_value, clippy::suboptimal_flops)]
+#![allow(
+    clippy::needless_pass_by_value,
+    clippy::suboptimal_flops,
+    clippy::cast_precision_loss
+)]
 
 mod asset_tracking;
 mod audio;

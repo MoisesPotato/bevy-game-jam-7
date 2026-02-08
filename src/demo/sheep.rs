@@ -1,4 +1,8 @@
-use std::{f32::consts::PI, time::Duration};
+use std::{
+    cmp::{Ordering, min},
+    f32::consts::PI,
+    time::Duration,
+};
 
 use bevy::prelude::*;
 use rand::{Rng, rng};
@@ -37,44 +41,74 @@ pub struct SheepMind {
     time_left: Timer,
 }
 
+const SHEEP_AWARENESS: usize = 4;
+
 #[derive(Reflect, Debug)]
 pub enum State {
-    Moving {
-        neighbor_count: u8,
-        goal: Vec2,
-        speed: f32,
-    },
+    Moving { goal: Vec2, speed: f32 },
+    Obseerving { neighbors: Vec<Vec2> },
     Idle,
 }
 
-const MIND_CAPACITY: u8 = 100;
-
 impl State {
-    fn add_goal(&mut self, vec: Vec2) {
-        let Self::Moving {
-            neighbor_count,
-            goal,
-            ..
-        } = self
-        else {
-            error!("Add a goal to idle sheep");
-            return;
-        };
-        if *neighbor_count == 0 {
-            *goal = vec;
-            *neighbor_count = 1;
-        } else if *neighbor_count < MIND_CAPACITY {
-            let n = f32::from(*neighbor_count);
-            *goal = (*goal * n + vec) / (n + 1.);
-            *neighbor_count += 1;
-        }
+    const fn new_thinking() -> Self {
+        Self::Obseerving { neighbors: vec![] }
     }
 
-    const fn new_moving() -> Self {
-        Self::Moving {
-            neighbor_count: 0,
-            goal: Vec2::ZERO,
-            speed: 100.,
+    fn target_if_thinking(&mut self, goal: Vec2) {
+        let Self::Obseerving { neighbors } = self else {
+            return;
+        };
+
+        neighbors.push(goal);
+    }
+
+    fn conclude_from_observation(&mut self) {
+        const COLLISION_DISTANCE: f32 = 20.;
+
+        let Self::Obseerving { neighbors } = self else {
+            return;
+        };
+
+        let count = min(neighbors.len(), SHEEP_AWARENESS);
+
+        if count == 0 {
+            *self = Self::Moving {
+                goal: Vec2::ZERO,
+                speed: 0.,
+            };
+            return;
+        }
+
+        neighbors.sort_unstable_by(|a, b| {
+            a.length()
+                .partial_cmp(&b.length())
+                .unwrap_or(Ordering::Equal)
+        });
+
+        if neighbors.len() > 1 {
+            assert!(neighbors[0].length() <= neighbors[1].length());
+        }
+
+        if neighbors[0].length() < COLLISION_DISTANCE {
+            *self = Self::Moving {
+                goal: -neighbors[0],
+                speed: 200.,
+            };
+        } else {
+            let goal = neighbors
+                .iter()
+                .map(|v| {
+                    if v.length() <= AVOID_RANGE {
+                        -v * 2.
+                    } else {
+                        *v
+                    }
+                })
+                .take(count)
+                .sum::<Vec2>()
+                / (count as f32);
+            *self = Self::Moving { goal, speed: 100. }
         }
     }
 }
@@ -127,7 +161,11 @@ fn think(mut sheep: Query<(&Transform, &mut SheepMind)>, time: Res<Time>) {
         }
         match &mut mind.state {
             State::Moving { .. } => mind.state = State::Idle,
-            State::Idle => mind.state = State::new_moving(),
+            State::Idle => mind.state = State::new_thinking(),
+            State::Obseerving { .. } => {
+                error!("Sheep should be done thinking");
+                mind.state = State::Idle;
+            }
         }
     }
 
@@ -139,19 +177,12 @@ fn think(mut sheep: Query<(&Transform, &mut SheepMind)>, time: Res<Time>) {
             continue;
         }
 
-        let avoid_factor = if dist < AVOID_RANGE {
-            -AVOID_RANGE / dist
-        } else {
-            1.
-        };
+        mind1.state.target_if_thinking(-vec);
+        mind2.state.target_if_thinking(vec);
+    }
 
-        if mind1.time_left.just_finished() && matches!(mind1.state, State::Moving { .. }) {
-            mind1.state.add_goal(-avoid_factor * vec);
-        }
-
-        if mind2.time_left.just_finished() && matches!(mind2.state, State::Moving { .. }) {
-            mind2.state.add_goal(avoid_factor * vec);
-        }
+    for (_, mut mind) in &mut sheep {
+        mind.state.conclude_from_observation();
     }
 }
 
