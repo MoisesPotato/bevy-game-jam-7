@@ -33,35 +33,60 @@ pub struct Sheep;
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 pub struct SheepMind {
-    neighbor_count: u8,
-    goal: Vec2,
-    speed: f32,
-    time_to_think: Timer,
+    state: State,
+    time_left: Timer,
+}
+
+#[derive(Reflect, Debug)]
+pub enum State {
+    Moving {
+        neighbor_count: u8,
+        goal: Vec2,
+        speed: f32,
+    },
+    Idle,
 }
 
 const MIND_CAPACITY: u8 = 100;
 
-impl SheepMind {
+impl State {
     fn add_goal(&mut self, vec: Vec2) {
-        if self.neighbor_count == 0 {
-            self.goal = vec;
-            self.neighbor_count = 1;
-        } else if self.neighbor_count < MIND_CAPACITY {
-            let n = f32::from(self.neighbor_count);
-            self.goal = (self.goal * n + vec) / (n + 1.);
-            self.neighbor_count += 1;
+        let Self::Moving {
+            neighbor_count,
+            goal,
+            ..
+        } = self
+        else {
+            error!("Add a goal to idle sheep");
+            return;
+        };
+        if *neighbor_count == 0 {
+            *goal = vec;
+            *neighbor_count = 1;
+        } else if *neighbor_count < MIND_CAPACITY {
+            let n = f32::from(*neighbor_count);
+            *goal = (*goal * n + vec) / (n + 1.);
+            *neighbor_count += 1;
         }
     }
 
-    fn new() -> Self {
-        Self {
+    const fn new_moving() -> Self {
+        Self::Moving {
             neighbor_count: 0,
             goal: Vec2::ZERO,
             speed: 100.,
-            time_to_think: Timer::new(
+        }
+    }
+}
+
+impl SheepMind {
+    fn new_idle() -> Self {
+        Self {
+            time_left: Timer::new(
                 Duration::from_millis(rng().random_range(400..600)),
                 TimerMode::Repeating,
             ),
+            state: State::Idle,
         }
     }
 }
@@ -79,7 +104,7 @@ pub fn sheep(player_assets: &PlayerAssets) -> impl Bundle {
     (
         Name::new("Sheep"),
         Sheep,
-        SheepMind::new(),
+        SheepMind::new_idle(),
         Sprite::from_image(player_assets.sheep.clone()),
         Transform {
             translation: pos.extend(0.),
@@ -96,15 +121,18 @@ const AVOID_RANGE: f32 = 40.;
 
 fn think(mut sheep: Query<(&Transform, &mut SheepMind)>, time: Res<Time>) {
     for (_, mut mind) in &mut sheep {
-        mind.time_to_think.tick(time.delta());
-        if mind.time_to_think.just_finished() {
-            mind.goal = Vec2::ZERO;
-            mind.neighbor_count = 0;
+        mind.time_left.tick(time.delta());
+        if !mind.time_left.just_finished() {
+            continue;
+        }
+        match &mut mind.state {
+            State::Moving { .. } => mind.state = State::Idle,
+            State::Idle => mind.state = State::new_moving(),
         }
     }
 
-    let mut combo = sheep.iter_combinations_mut::<2>();
-    while let Some([(trans1, mut mind1), (trans2, mut mind2)]) = combo.fetch_next() {
+    let mut combinations = sheep.iter_combinations_mut::<2>();
+    while let Some([(trans1, mut mind1), (trans2, mut mind2)]) = combinations.fetch_next() {
         let vec = (trans1.translation - trans2.translation).xy();
         let dist = vec.length();
         if dist > RANGE {
@@ -117,19 +145,21 @@ fn think(mut sheep: Query<(&Transform, &mut SheepMind)>, time: Res<Time>) {
             1.
         };
 
-        if mind1.time_to_think.just_finished() {
-            mind1.add_goal(-avoid_factor * vec);
+        if mind1.time_left.just_finished() && matches!(mind1.state, State::Moving { .. }) {
+            mind1.state.add_goal(-avoid_factor * vec);
         }
 
-        if mind2.time_to_think.just_finished() {
-            mind2.add_goal(avoid_factor * vec);
+        if mind2.time_left.just_finished() && matches!(mind2.state, State::Moving { .. }) {
+            mind2.state.add_goal(avoid_factor * vec);
         }
     }
 }
 
 fn walk(sheep: Query<(&mut Transform, &SheepMind), Without<Player>>, time: Res<Time>) {
     for (mut transf, mind) in sheep {
-        let goal = mind.speed * mind.goal.normalize_or_zero().extend(0.);
-        transf.translation += time.delta_secs() * goal;
+        if let State::Moving { goal, speed, .. } = &mind.state {
+            let goal = *speed * goal.normalize_or_zero().extend(0.);
+            transf.translation += time.delta_secs() * goal;
+        }
     }
 }
