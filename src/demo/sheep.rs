@@ -20,7 +20,7 @@ use crate::{
 };
 
 pub fn plugin(app: &mut App) {
-    app.load_resource::<Assets>();
+    app.load_resource::<SheepAssets>();
 
     app.add_systems(
         Update,
@@ -132,9 +132,14 @@ impl SheepMind {
     }
 }
 
-pub fn sheep(player_assets: &PlayerAssets) -> impl Bundle {
+pub fn sheep(
+    player_assets: &PlayerAssets,
+    texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
+) -> impl Bundle {
     // A texture atlas is a way to split a single image into a grid of related images.
     // You can learn more in this example: https://github.com/bevyengine/bevy/blob/latest/examples/2d/texture_atlas.rs
+    let layout = TextureAtlasLayout::from_grid(UVec2::splat(16), 2, 1, None, None);
+    let texture_atlas_layout = texture_atlas_layouts.add(layout);
     let player_animation = PlayerAnimation::new();
 
     let mut rng = rng();
@@ -146,7 +151,13 @@ pub fn sheep(player_assets: &PlayerAssets) -> impl Bundle {
         Name::new("Sheep"),
         Sheep,
         SheepMind::new_idle(),
-        Sprite::from_image(player_assets.sheep.clone()),
+        Sprite::from_atlas_image(
+            player_assets.sheep.clone(),
+            TextureAtlas {
+                layout: texture_atlas_layout,
+                index: player_animation.get_atlas_index(),
+            },
+        ),
         Transform {
             translation: pos.extend(0.),
             rotation: Quat::IDENTITY,
@@ -252,12 +263,12 @@ fn speed_from_time(time_fraction: f32) -> f32 {
 
 #[derive(Resource, Asset, Clone, Reflect)]
 #[reflect(Resource)]
-pub struct Assets {
+pub struct SheepAssets {
     #[dependency]
     pub bleats: Vec<Handle<AudioSource>>,
 }
 
-impl FromWorld for Assets {
+impl FromWorld for SheepAssets {
     fn from_world(world: &mut World) -> Self {
         let assets = world.resource::<AssetServer>();
         Self {
@@ -280,7 +291,7 @@ impl FromWorld for Assets {
 }
 
 /// B for bleat
-fn bleat(mut commands: Commands, assets: If<Res<Assets>>) {
+fn bleat(mut commands: Commands, assets: If<Res<SheepAssets>>) {
     let rng = &mut rand::rng();
     let random_bleat = assets.bleats.choose(rng).unwrap().clone();
     commands.spawn(sound_effect(random_bleat));

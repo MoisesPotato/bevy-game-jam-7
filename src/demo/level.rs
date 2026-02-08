@@ -36,6 +36,7 @@ pub fn spawn_level(
     mut commands: Commands,
     level_assets: Res<LevelAssets>,
     player_assets: Res<PlayerAssets>,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let level = commands
         .spawn((
@@ -51,6 +52,9 @@ pub fn spawn_level(
         .id();
 
     for _ in 0..N_SHEEP {
-        commands.spawn((sheep(&player_assets), ChildOf(level)));
+        commands.spawn((
+            sheep(&player_assets, &mut texture_atlas_layouts),
+            ChildOf(level),
+        ));
     }
 }
