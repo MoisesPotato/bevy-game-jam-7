@@ -223,8 +223,17 @@ fn think(mut sheep: Query<(&Transform, &mut SheepMind)>, time: Res<Time>) {
 fn walk(sheep: Query<(&mut Transform, &SheepMind), Without<Player>>, time: Res<Time>) {
     for (mut transf, mind) in sheep {
         if let State::Moving { goal, speed, .. } = &mind.state {
-            let goal = *speed * goal.normalize_or_zero().extend(0.);
+            let speed = *speed
+                * speed_from_time(
+                    mind.time_left.elapsed().as_secs_f32()
+                        / mind.time_left.duration().as_secs_f32(),
+                );
+            let goal = speed * goal.normalize_or_zero().extend(0.);
             transf.translation += time.delta_secs() * goal;
         }
     }
+}
+
+fn speed_from_time(time_fraction: f32) -> f32 {
+    4. * time_fraction * (1. - time_fraction)
 }
