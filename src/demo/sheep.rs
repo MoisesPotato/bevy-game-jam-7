@@ -5,11 +5,13 @@ use std::{
     time::Duration,
 };
 
-use bevy::prelude::*;
-use rand::{Rng, rng};
+use bevy::{input::common_conditions::input_just_pressed, prelude::*};
+use rand::{Rng, rng, seq::IndexedRandom};
 
 use crate::{
     AppSystems, PausableSystems,
+    asset_tracking::LoadResource,
+    audio::sound_effect,
     demo::{
         animation::PlayerAnimation,
         movement::ScreenWrap,
@@ -18,10 +20,20 @@ use crate::{
 };
 
 pub fn plugin(app: &mut App) {
+    app.load_resource::<Assets>();
+
     app.add_systems(
         Update,
         (collision, think, walk)
             .chain()
+            .in_set(AppSystems::Update)
+            .in_set(PausableSystems),
+    );
+
+    app.add_systems(
+        Update,
+        bleat
+            .run_if(input_just_pressed(KeyCode::KeyB))
             .in_set(AppSystems::Update)
             .in_set(PausableSystems),
     );
@@ -236,4 +248,40 @@ fn walk(sheep: Query<(&mut Transform, &SheepMind), Without<Player>>, time: Res<T
 
 fn speed_from_time(time_fraction: f32) -> f32 {
     4. * time_fraction * (1. - time_fraction)
+}
+
+#[derive(Resource, Asset, Clone, Reflect)]
+#[reflect(Resource)]
+pub struct Assets {
+    #[dependency]
+    pub bleats: Vec<Handle<AudioSource>>,
+}
+
+impl FromWorld for Assets {
+    fn from_world(world: &mut World) -> Self {
+        let assets = world.resource::<AssetServer>();
+        Self {
+            bleats: vec![
+                assets.load("audio/sound_effects/bleat1.ogg"),
+                assets.load("audio/sound_effects/bleat2.ogg"),
+                assets.load("audio/sound_effects/bleat3.ogg"),
+                assets.load("audio/sound_effects/bleat4.ogg"),
+                assets.load("audio/sound_effects/bleat5.ogg"),
+                assets.load("audio/sound_effects/bleat6.ogg"),
+                assets.load("audio/sound_effects/bleat7.ogg"),
+                assets.load("audio/sound_effects/bleat8.ogg"),
+                assets.load("audio/sound_effects/bleat9.ogg"),
+                assets.load("audio/sound_effects/bleat10.ogg"),
+                assets.load("audio/sound_effects/bleat11.ogg"),
+                assets.load("audio/sound_effects/bleat12.ogg"),
+            ],
+        }
+    }
+}
+
+/// B for bleat
+fn bleat(mut commands: Commands, assets: If<Res<Assets>>) {
+    let rng = &mut rand::rng();
+    let random_bleat = assets.bleats.choose(rng).unwrap().clone();
+    commands.spawn(sound_effect(random_bleat));
 }
