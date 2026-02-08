@@ -6,7 +6,9 @@
 #![allow(
     clippy::needless_pass_by_value,
     clippy::suboptimal_flops,
-    clippy::cast_precision_loss
+    clippy::cast_precision_loss,
+    // This one is just bugged
+    clippy::used_underscore_binding
 )]
 
 mod asset_tracking;

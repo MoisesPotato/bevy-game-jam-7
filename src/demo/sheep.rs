@@ -13,7 +13,7 @@ use crate::{
     asset_tracking::LoadResource,
     audio::sound_effect,
     demo::{
-        animation::PlayerAnimation,
+        animation::SheepAnimation,
         movement::ScreenWrap,
         player::{Player, PlayerAssets},
     },
@@ -46,7 +46,7 @@ pub struct Sheep;
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 pub struct SheepMind {
-    state: State,
+    pub state: State,
     time_left: Timer,
 }
 
@@ -138,9 +138,9 @@ pub fn sheep(
 ) -> impl Bundle {
     // A texture atlas is a way to split a single image into a grid of related images.
     // You can learn more in this example: https://github.com/bevyengine/bevy/blob/latest/examples/2d/texture_atlas.rs
-    let layout = TextureAtlasLayout::from_grid(UVec2::splat(16), 2, 1, None, None);
+    let layout = TextureAtlasLayout::from_grid(UVec2::splat(16), 7, 1, None, None);
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
-    let player_animation = PlayerAnimation::new();
+    let player_animation = SheepAnimation::new();
 
     let mut rng = rng();
     let angle = 2. * PI * rng.random::<f32>();

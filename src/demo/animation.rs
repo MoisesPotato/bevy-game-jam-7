@@ -11,7 +11,11 @@ use std::time::Duration;
 use crate::{
     AppSystems, PausableSystems,
     audio::sound_effect,
-    demo::{movement::MovementController, player::PlayerAssets},
+    demo::{
+        movement::MovementController,
+        player::PlayerAssets,
+        sheep::{self, SheepMind},
+    },
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -21,7 +25,8 @@ pub(super) fn plugin(app: &mut App) {
         (
             update_animation_timer.in_set(AppSystems::TickTimers),
             (
-                update_animation_movement,
+                update_animation_movement::<MovementController>,
+                update_animation_movement::<SheepMind>,
                 update_animation_atlas,
                 trigger_step_sound_effect,
             )
@@ -33,34 +38,64 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 /// Update the animation timer.
-fn update_animation_timer(time: Res<Time>, mut query: Query<&mut PlayerAnimation>) {
+fn update_animation_timer(time: Res<Time>, mut query: Query<&mut SheepAnimation>) {
     for mut animation in &mut query {
         animation.update_timer(time.delta());
     }
 }
 
+trait Movement {
+    fn dx(&self) -> f32;
+    fn moving(&self) -> bool;
+}
+
+impl Movement for MovementController {
+    fn dx(&self) -> f32 {
+        self.intent.x
+    }
+
+    fn moving(&self) -> bool {
+        self.intent == Vec2::ZERO
+    }
+}
+
+impl Movement for SheepMind {
+    fn dx(&self) -> f32 {
+        match self.state {
+            sheep::State::Moving { goal, .. } => goal.x,
+            sheep::State::Obseerving { .. } | sheep::State::Idle => 0.,
+        }
+    }
+
+    fn moving(&self) -> bool {
+        match self.state {
+            sheep::State::Moving { .. } => true,
+            sheep::State::Obseerving { .. } | sheep::State::Idle => false,
+        }
+    }
+}
+
 /// Update the sprite direction and animation state (idling/walking).
-fn update_animation_movement(
-    mut player_query: Query<(&MovementController, &mut Sprite, &mut PlayerAnimation)>,
+fn update_animation_movement<T: Movement + Component>(
+    mut player_query: Query<(&T, &mut Sprite, &mut SheepAnimation)>,
 ) {
     for (controller, mut sprite, mut animation) in &mut player_query {
-        let dx = controller.intent.x;
+        let dx = controller.dx();
         if dx != 0.0 {
             sprite.flip_x = dx < 0.0;
         }
 
-        let animation_state = if controller.intent == Vec2::ZERO {
-            PlayerAnimationState::Idling
+        let animation_state = if controller.moving() {
+            PlayerAnimationState::Walking
         } else {
             PlayerAnimationState::Idling
-            // PlayerAnimationState::Walking
         };
         animation.update_state(animation_state);
     }
 }
 
 /// Update the texture atlas to reflect changes in the animation.
-fn update_animation_atlas(mut query: Query<(&PlayerAnimation, &mut Sprite)>) {
+fn update_animation_atlas(mut query: Query<(&SheepAnimation, &mut Sprite)>) {
     for (animation, mut sprite) in &mut query {
         let Some(atlas) = sprite.texture_atlas.as_mut() else {
             continue;
@@ -76,10 +111,10 @@ fn update_animation_atlas(mut query: Query<(&PlayerAnimation, &mut Sprite)>) {
 fn trigger_step_sound_effect(
     mut commands: Commands,
     player_assets: If<Res<PlayerAssets>>,
-    mut step_query: Query<&PlayerAnimation>,
+    mut step_query: Query<&SheepAnimation, With<MovementController>>,
 ) {
     for animation in &mut step_query {
-        if animation.state == PlayerAnimationState::_Walking
+        if animation.state == PlayerAnimationState::Walking
             && animation.changed()
             && (animation.frame == 2 || animation.frame == 5)
         {
@@ -94,7 +129,7 @@ fn trigger_step_sound_effect(
 /// It is tightly bound to the texture atlas we use.
 #[derive(Component, Reflect)]
 #[reflect(Component)]
-pub struct PlayerAnimation {
+pub struct SheepAnimation {
     timer: Timer,
     frame: usize,
     state: PlayerAnimationState,
@@ -103,16 +138,16 @@ pub struct PlayerAnimation {
 #[derive(Reflect, PartialEq, Eq)]
 pub enum PlayerAnimationState {
     Idling,
-    _Walking,
+    Walking,
 }
 
-impl PlayerAnimation {
+impl SheepAnimation {
     /// The number of idle frames.
     const IDLE_FRAMES: usize = 2;
     /// The duration of each idle frame.
     const IDLE_INTERVAL: Duration = Duration::from_millis(500);
     /// The number of walking frames.
-    const WALKING_FRAMES: usize = 6;
+    const WALKING_FRAMES: usize = 5;
     /// The duration of each walking frame.
     const WALKING_INTERVAL: Duration = Duration::from_millis(50);
 
@@ -128,7 +163,7 @@ impl PlayerAnimation {
         Self {
             timer: Timer::new(Self::WALKING_INTERVAL, TimerMode::Repeating),
             frame: 0,
-            state: PlayerAnimationState::_Walking,
+            state: PlayerAnimationState::Walking,
         }
     }
 
@@ -145,7 +180,7 @@ impl PlayerAnimation {
         self.frame = (self.frame + 1)
             % match self.state {
                 PlayerAnimationState::Idling => Self::IDLE_FRAMES,
-                PlayerAnimationState::_Walking => Self::WALKING_FRAMES,
+                PlayerAnimationState::Walking => Self::WALKING_FRAMES,
             };
     }
 
@@ -154,7 +189,7 @@ impl PlayerAnimation {
         if self.state != state {
             match state {
                 PlayerAnimationState::Idling => *self = Self::idling(),
-                PlayerAnimationState::_Walking => *self = Self::_walking(),
+                PlayerAnimationState::Walking => *self = Self::_walking(),
             }
         }
     }
@@ -168,7 +203,7 @@ impl PlayerAnimation {
     pub const fn get_atlas_index(&self) -> usize {
         match self.state {
             PlayerAnimationState::Idling => self.frame,
-            PlayerAnimationState::_Walking => Self::IDLE_FRAMES + self.frame,
+            PlayerAnimationState::Walking => Self::IDLE_FRAMES + self.frame,
         }
     }
 }
