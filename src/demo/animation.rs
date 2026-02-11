@@ -14,7 +14,7 @@ use crate::{
     demo::{
         movement::MovementController,
         player::PlayerAssets,
-        sheep::{self, SheepMind},
+        sheep::{self, BleatImage, SOUND_DIST, SheepMind},
     },
 };
 
@@ -29,6 +29,7 @@ pub(super) fn plugin(app: &mut App) {
                 update_animation_movement::<SheepMind>,
                 update_animation_atlas,
                 trigger_step_sound_effect,
+                flip_bleat_sound,
             )
                 .chain()
                 .in_set(AppSystems::Update),
@@ -91,6 +92,25 @@ fn update_animation_movement<T: Movement + Component>(
             PlayerAnimationState::Idling
         };
         animation.update_state(animation_state);
+    }
+}
+
+fn flip_bleat_sound(
+    sheep: Query<&Sprite, Without<BleatImage>>,
+    sounds: Query<(&ChildOf, &mut Sprite, &mut Transform), With<BleatImage>>,
+) {
+    for (child_of, mut sprite, mut transf) in sounds {
+        let parent = child_of.parent();
+        let Ok(parent) = sheep.get(parent) else {
+            error!("No sheep!");
+            continue;
+        };
+        sprite.flip_x = parent.flip_x;
+        if parent.flip_x {
+            transf.translation.x = -SOUND_DIST;
+        } else {
+            transf.translation.x = SOUND_DIST;
+        }
     }
 }
 

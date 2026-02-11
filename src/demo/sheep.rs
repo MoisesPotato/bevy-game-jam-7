@@ -312,7 +312,7 @@ fn bleat(
             .spawn((
                 Name::new("Bleat image"),
                 BleatImage { sound_id },
-                Transform::from_translation(Vec3::new(16., 0., 0.)),
+                Transform::from_translation(Vec3::new(SOUND_DIST, 0., 0.)),
                 Sprite::from_image(assets.sound.clone()),
             ))
             .id();
@@ -334,9 +334,11 @@ fn despawn_bleat_image(
     }
 }
 
+pub const SOUND_DIST: f32 = 16.;
+
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
-struct BleatImage {
+pub struct BleatImage {
     sound_id: Entity,
 }
 
