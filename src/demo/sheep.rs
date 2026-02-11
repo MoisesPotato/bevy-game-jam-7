@@ -37,6 +37,8 @@ pub fn plugin(app: &mut App) {
             .in_set(AppSystems::Update)
             .in_set(PausableSystems),
     );
+
+    app.add_systems(Update, despawn_bleat_image.in_set(AppSystems::Update));
 }
 
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
@@ -301,14 +303,15 @@ fn bleat(
 ) {
     let rng = &mut rand::rng();
     let random_bleat = assets.bleats.choose(rng).unwrap().clone();
-    commands.spawn((sound_effect(random_bleat), BleatSound {}));
+    let sound_id = commands
+        .spawn((sound_effect(random_bleat), BleatSound {}))
+        .id();
 
     for id in player_sheep {
-        tracing::info!(%id);
         let child_id = commands
             .spawn((
                 Name::new("Bleat image"),
-                BleatImage {},
+                BleatImage { sound_id },
                 Transform::from_translation(Vec3::new(16., 0., 0.)),
                 Sprite::from_image(assets.sound.clone()),
             ))
@@ -317,10 +320,24 @@ fn bleat(
     }
 }
 
+fn despawn_bleat_image(
+    mut commands: Commands,
+    mut removed: RemovedComponents<BleatSound>,
+    bleats: Query<(Entity, &BleatImage)>,
+) {
+    for sound in removed.read() {
+        for (id, img) in bleats {
+            if img.sound_id == sound {
+                commands.entity(id).despawn();
+            }
+        }
+    }
+}
+
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 struct BleatImage {
-    // sound_image: Entity,
+    sound_id: Entity,
 }
 
 #[derive(Component, Reflect, Debug)]
