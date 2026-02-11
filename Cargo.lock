@@ -3078,17 +3078,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
-name = "jam"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy-inspector-egui",
- "getrandom",
- "rand",
- "tracing",
-]
-
-[[package]]
 name = "jni"
 version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5448,6 +5437,17 @@ dependencies = [
  "serde",
  "thiserror 2.0.17",
  "web-sys",
+]
+
+[[package]]
+name = "which-sheep"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+ "getrandom",
+ "rand",
+ "tracing",
 ]
 
 [[package]]
