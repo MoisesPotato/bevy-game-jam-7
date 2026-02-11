@@ -39,6 +39,13 @@ pub fn plugin(app: &mut App) {
             .in_set(PausableSystems),
     );
 
+    app.add_systems(
+        Update,
+        bleat::tick
+            .in_set(AppSystems::Update)
+            .in_set(PausableSystems),
+    );
+
     app.add_systems(Update, bleat::despawn_image.in_set(AppSystems::Update));
 }
 
@@ -154,6 +161,9 @@ pub fn sheep(
         Name::new("Sheep"),
         Sheep,
         SheepMind::new_idle(),
+        bleat::RecentBleat {
+            timer: Timer::from_seconds(0., TimerMode::Once),
+        },
         Sprite::from_atlas_image(
             player_assets.sheep.clone(),
             TextureAtlas {

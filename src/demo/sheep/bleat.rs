@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 use rand::seq::IndexedRandom;
 
@@ -5,10 +7,18 @@ use crate::{
     audio::sound_effect,
     demo::{movement::MovementController, sheep::SheepAssets},
 };
+pub fn tick(time: Res<Time>, sheep: Query<&mut RecentBleat>) {
+    for mut recent in sheep {
+        recent.timer.tick(time.delta());
+    }
+}
+
+const PLAYER_BLEAT_DELAY_SECS: f32 = 1.;
+
 /// B for bleat
 pub fn with_b(
     mut commands: Commands,
-    player_sheep: Query<Entity, With<MovementController>>,
+    player_sheep: Query<(Entity, &mut RecentBleat), With<MovementController>>,
     assets: If<Res<SheepAssets>>,
 ) {
     let rng = &mut rand::rng();
@@ -17,7 +27,16 @@ pub fn with_b(
         .spawn((sound_effect(random_bleat), BleatSound {}))
         .id();
 
-    for id in player_sheep {
+    for (id, mut recent) in player_sheep {
+        if !recent.timer.is_finished() {
+            continue;
+        }
+
+        recent
+            .timer
+            .set_duration(Duration::from_secs_f32(PLAYER_BLEAT_DELAY_SECS));
+        recent.timer.reset();
+
         let child_id = commands
             .spawn((
                 Name::new("Bleat image"),
@@ -55,3 +74,9 @@ pub struct BleatImage {
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 pub struct BleatSound;
+
+#[derive(Component, Reflect, Debug)]
+#[reflect(Component)]
+pub struct RecentBleat {
+    pub timer: Timer,
+}
