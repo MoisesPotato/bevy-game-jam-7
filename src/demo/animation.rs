@@ -14,7 +14,7 @@ use crate::{
     demo::{
         movement::MovementController,
         player::PlayerAssets,
-        sheep::{self, BleatImage, SOUND_DIST, SheepMind},
+        sheep::{self, SheepMind, bleat::BleatImage, bleat::SOUND_DIST},
     },
 };
 
