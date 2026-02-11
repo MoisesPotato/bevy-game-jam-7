@@ -18,8 +18,9 @@ pub fn plugin(app: &mut App) {
         Update,
         toggle_debug_ui.run_if(input_just_pressed(TOGGLE_KEY)),
     );
-    app.add_plugins(EguiPlugin::default())
-        .add_plugins(WorldInspectorPlugin::default().run_if(input_toggle_active(true, TOGGLE_KEY)));
+    app.add_plugins(EguiPlugin::default()).add_plugins(
+        WorldInspectorPlugin::default().run_if(input_toggle_active(false, TOGGLE_KEY)),
+    );
 }
 
 const TOGGLE_KEY: KeyCode = KeyCode::Backquote;

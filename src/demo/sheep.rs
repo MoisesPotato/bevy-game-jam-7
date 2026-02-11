@@ -296,19 +296,24 @@ impl FromWorld for SheepAssets {
 /// B for bleat
 fn bleat(
     mut commands: Commands,
-    player_sheep: Query<(Entity, &Transform), With<MovementController>>,
+    player_sheep: Query<Entity, With<MovementController>>,
     assets: If<Res<SheepAssets>>,
 ) {
     let rng = &mut rand::rng();
     let random_bleat = assets.bleats.choose(rng).unwrap().clone();
     commands.spawn((sound_effect(random_bleat), BleatSound {}));
 
-    for (id, player) in player_sheep {
-        commands.entity(id).insert(children![(
-            BleatImage {},
-            Transform::from_translation(Vec3::new(16., 0., 0.)),
-            Sprite::from_image(assets.sound.clone())
-        )]);
+    for id in player_sheep {
+        tracing::info!(%id);
+        let child_id = commands
+            .spawn((
+                Name::new("Bleat image"),
+                BleatImage {},
+                Transform::from_translation(Vec3::new(16., 0., 0.)),
+                Sprite::from_image(assets.sound.clone()),
+            ))
+            .id();
+        commands.entity(id).add_children(&[child_id]);
     }
 }
 
