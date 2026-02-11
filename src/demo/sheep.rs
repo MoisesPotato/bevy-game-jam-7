@@ -41,7 +41,7 @@ pub fn plugin(app: &mut App) {
 
     app.add_systems(
         Update,
-        bleat::tick
+        (bleat::tick, bleat::spread, bleat::random)
             .in_set(AppSystems::Update)
             .in_set(PausableSystems),
     );
@@ -162,7 +162,13 @@ pub fn sheep(
         Sheep,
         SheepMind::new_idle(),
         bleat::RecentBleat {
-            timer: Timer::from_seconds(0., TimerMode::Once),
+            time_to_bleat: Timer::from_seconds(0., TimerMode::Once),
+            time_to_spread: {
+                let mut timer = Timer::from_seconds(bleat::TIME_TO_SPREAD_SECS, TimerMode::Once);
+                timer.finish();
+                timer.tick(Duration::new(1, 0));
+                timer
+            },
         },
         Sprite::from_atlas_image(
             player_assets.sheep.clone(),
