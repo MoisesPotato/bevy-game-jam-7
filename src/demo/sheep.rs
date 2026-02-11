@@ -14,7 +14,7 @@ use crate::{
     audio::sound_effect,
     demo::{
         animation::SheepAnimation,
-        movement::ScreenWrap,
+        movement::{MovementController, ScreenWrap},
         player::{Player, PlayerAssets},
     },
 };
@@ -266,6 +266,8 @@ fn speed_from_time(time_fraction: f32) -> f32 {
 pub struct SheepAssets {
     #[dependency]
     pub bleats: Vec<Handle<AudioSource>>,
+    #[dependency]
+    pub sound: Handle<Image>,
 }
 
 impl FromWorld for SheepAssets {
@@ -286,13 +288,38 @@ impl FromWorld for SheepAssets {
                 assets.load("audio/sound_effects/bleat11.ogg"),
                 assets.load("audio/sound_effects/bleat12.ogg"),
             ],
+            sound: assets.load("images/sound.png"),
         }
     }
 }
 
 /// B for bleat
-fn bleat(mut commands: Commands, assets: If<Res<SheepAssets>>) {
+fn bleat(
+    mut commands: Commands,
+    player_sheep: Query<(Entity, &Transform), With<MovementController>>,
+    assets: If<Res<SheepAssets>>,
+) {
     let rng = &mut rand::rng();
     let random_bleat = assets.bleats.choose(rng).unwrap().clone();
-    commands.spawn(sound_effect(random_bleat));
+    commands.spawn((sound_effect(random_bleat), BleatSound {}));
+
+    for (id, player) in player_sheep {
+        commands.entity(id).insert(children![(
+            BleatImage {},
+            Transform::from_translation(Vec3::new(16., 0., 0.)),
+            Sprite::from_image(assets.sound.clone())
+        )]);
+    }
+}
+
+#[derive(Component, Reflect, Debug)]
+#[reflect(Component)]
+struct BleatImage {
+    // sound_image: Entity,
+}
+
+#[derive(Component, Reflect, Debug)]
+#[reflect(Component)]
+struct BleatSound {
+    // sound_image: Entity,
 }
