@@ -9,7 +9,7 @@ use rand::{Rng, rng};
 use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
-    demo::{movement::MovementController, sheep::Sheep},
+    demo::{movement::HumanMind, sheep::Sheep},
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -27,8 +27,13 @@ pub(super) fn plugin(app: &mut App) {
 pub fn choose(mut commands: Commands, sheep: Query<Entity, With<Sheep>>) {
     let mut count = 0;
     for id in sheep {
-        commands.entity(id).remove::<(Player, MovementController)>();
+        commands.entity(id).remove::<(Player, HumanMind)>();
         count += 1;
+    }
+
+    if count == 0 {
+        error!("No sheep");
+        return;
     }
 
     let new_player = rng().random_range(0..count);
@@ -38,9 +43,7 @@ pub fn choose(mut commands: Commands, sheep: Query<Entity, With<Sheep>>) {
         return;
     };
 
-    commands
-        .entity(id)
-        .insert((Player, MovementController::default()));
+    commands.entity(id).insert((Player, HumanMind::default()));
 }
 
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
@@ -49,7 +52,7 @@ pub struct Player;
 
 fn record_player_directional_input(
     input: Res<ButtonInput<KeyCode>>,
-    mut controller_query: Query<&mut MovementController, With<Player>>,
+    mut controller_query: Query<&mut HumanMind, With<Player>>,
 ) {
     // Collect directional input.
     let mut intent = Vec2::ZERO;

@@ -12,7 +12,7 @@ use crate::{
     AppSystems, PausableSystems,
     audio::sound_effect,
     demo::{
-        movement::MovementController,
+        movement::HumanMind,
         player::PlayerAssets,
         sheep::{self, SheepMind, bleat::BleatImage, bleat::SOUND_DIST},
     },
@@ -25,7 +25,7 @@ pub(super) fn plugin(app: &mut App) {
         (
             update_animation_timer.in_set(AppSystems::TickTimers),
             (
-                update_animation_movement::<MovementController>,
+                update_animation_movement::<HumanMind>,
                 update_animation_movement::<SheepMind>,
                 update_animation_atlas,
                 trigger_step_sound_effect,
@@ -50,7 +50,7 @@ trait Movement {
     fn moving(&self) -> bool;
 }
 
-impl Movement for MovementController {
+impl Movement for HumanMind {
     fn dx(&self) -> f32 {
         self.intent.x
     }
@@ -131,7 +131,7 @@ fn update_animation_atlas(mut query: Query<(&SheepAnimation, &mut Sprite)>) {
 fn trigger_step_sound_effect(
     mut commands: Commands,
     player_assets: If<Res<PlayerAssets>>,
-    mut step_query: Query<&SheepAnimation, With<MovementController>>,
+    mut step_query: Query<&SheepAnimation, With<HumanMind>>,
 ) {
     for animation in &mut step_query {
         if animation.state == PlayerAnimationState::Walking

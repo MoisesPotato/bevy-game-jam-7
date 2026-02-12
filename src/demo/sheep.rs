@@ -16,9 +16,11 @@ use crate::{
         movement::ScreenWrap,
         player::{Player, PlayerAssets},
     },
+    screens::Screen,
 };
 
 pub mod bleat;
+pub mod ego;
 
 pub fn plugin(app: &mut App) {
     app.load_resource::<SheepAssets>();
@@ -28,7 +30,8 @@ pub fn plugin(app: &mut App) {
         (collision, think, walk)
             .chain()
             .in_set(AppSystems::Update)
-            .in_set(PausableSystems),
+            .in_set(PausableSystems)
+            .run_if(in_state(Screen::Gameplay)),
     );
 
     app.add_systems(
@@ -36,14 +39,16 @@ pub fn plugin(app: &mut App) {
         bleat::with_b
             .run_if(input_just_pressed(KeyCode::KeyB))
             .in_set(AppSystems::Update)
-            .in_set(PausableSystems),
+            .in_set(PausableSystems)
+            .run_if(in_state(Screen::Gameplay)),
     );
 
     app.add_systems(
         Update,
-        (bleat::tick, bleat::spread, bleat::random)
+        (bleat::tick, bleat::spread, bleat::random, ego::jump)
             .in_set(AppSystems::Update)
-            .in_set(PausableSystems),
+            .in_set(PausableSystems)
+            .run_if(in_state(Screen::Gameplay)),
     );
 
     app.add_systems(Update, bleat::despawn_image.in_set(AppSystems::Update));

@@ -32,7 +32,7 @@ pub(super) fn plugin(app: &mut App) {
 /// other players as well.
 #[derive(Component, Reflect)]
 #[reflect(Component)]
-pub struct MovementController {
+pub struct HumanMind {
     /// The direction the character wants to move in.
     pub intent: Vec2,
 
@@ -41,7 +41,7 @@ pub struct MovementController {
     pub max_speed: f32,
 }
 
-impl Default for MovementController {
+impl Default for HumanMind {
     fn default() -> Self {
         Self {
             intent: Vec2::ZERO,
@@ -51,10 +51,7 @@ impl Default for MovementController {
     }
 }
 
-fn apply_movement(
-    time: Res<Time>,
-    mut movement_query: Query<(&MovementController, &mut Transform)>,
-) {
+fn apply_movement(time: Res<Time>, mut movement_query: Query<(&HumanMind, &mut Transform)>) {
     for (controller, mut transform) in &mut movement_query {
         let velocity = controller.max_speed * controller.intent;
         transform.translation += velocity.extend(0.0) * time.delta_secs();
