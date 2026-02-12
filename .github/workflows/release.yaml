@@ -38,6 +38,8 @@ jobs:
           cargo install -f wasm-bindgen-cli --version $version
 
       - name: Build
+        env:
+          RUSTFLAGS: --cfg getrandom_backend=\"wasm_js\"
         run: |
           cargo build --release --target wasm32-unknown-unknown
 
