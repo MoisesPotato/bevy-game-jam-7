@@ -5,7 +5,7 @@ use rand::{Rng, rng, seq::IndexedRandom};
 
 use crate::{
     audio::sound_effect,
-    demo::{movement::MovementController, sheep::SheepAssets},
+    demo::{movement::HumanMind, sheep::SheepAssets},
 };
 pub fn tick(time: Res<Time>, sheep: Query<&mut RecentBleat>) {
     for mut recent in sheep {
@@ -20,7 +20,7 @@ const SHEEP_BLEAT_DELAY_SECS: f32 = 2.;
 /// B for bleat
 pub fn with_b(
     mut commands: Commands,
-    player_sheep: Query<(Entity, &mut RecentBleat), With<MovementController>>,
+    player_sheep: Query<(Entity, &mut RecentBleat), With<HumanMind>>,
     assets: If<Res<SheepAssets>>,
 ) {
     for (id, mut recent) in player_sheep {
@@ -106,12 +106,7 @@ const BLEAT_SPREAD_CHANCE: f32 = 0.3;
 pub fn spread(
     mut commands: Commands,
     assets: If<Res<SheepAssets>>,
-    mut sheep: Query<(
-        Entity,
-        &Transform,
-        &mut RecentBleat,
-        Option<&MovementController>,
-    )>,
+    mut sheep: Query<(Entity, &Transform, &mut RecentBleat, Option<&HumanMind>)>,
 ) {
     let mut rng = rng();
 
@@ -159,7 +154,7 @@ pub fn random(
     mut timer: Local<SheepTimer>,
     time: Res<Time>,
     assets: If<Res<SheepAssets>>,
-    sheep: Query<(Entity, &mut RecentBleat, Option<&MovementController>)>,
+    sheep: Query<(Entity, &mut RecentBleat, Option<&HumanMind>)>,
 ) {
     timer.0.tick(time.delta());
 

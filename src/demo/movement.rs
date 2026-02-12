@@ -1,18 +1,3 @@
-//! Handle player input and translate it into movement through a character
-//! controller. A character controller is the collection of systems that govern
-//! the movement of characters.
-//!
-//! In our case, the character controller has the following logic:
-//! - Set [`MovementController`] intent based on directional keyboard input.
-//!   This is done in the `player` module, as it is specific to the player
-//!   character.
-//! - Apply movement based on [`MovementController`] intent and maximum speed.
-//! - Wrap the character within the window.
-//!
-//! Note that the implementation used here is limited for demonstration
-//! purposes. If you want to move the player in a smoother way,
-//! consider using a [fixed timestep](https://github.com/bevyengine/bevy/blob/main/examples/movement/physics_in_fixed_timestep.rs).
-
 use bevy::{prelude::*, window::PrimaryWindow};
 
 use crate::{AppSystems, PausableSystems};
@@ -32,7 +17,7 @@ pub(super) fn plugin(app: &mut App) {
 /// other players as well.
 #[derive(Component, Reflect)]
 #[reflect(Component)]
-pub struct MovementController {
+pub struct HumanMind {
     /// The direction the character wants to move in.
     pub intent: Vec2,
 
@@ -41,7 +26,7 @@ pub struct MovementController {
     pub max_speed: f32,
 }
 
-impl Default for MovementController {
+impl Default for HumanMind {
     fn default() -> Self {
         Self {
             intent: Vec2::ZERO,
@@ -51,10 +36,7 @@ impl Default for MovementController {
     }
 }
 
-fn apply_movement(
-    time: Res<Time>,
-    mut movement_query: Query<(&MovementController, &mut Transform)>,
-) {
+fn apply_movement(time: Res<Time>, mut movement_query: Query<(&HumanMind, &mut Transform)>) {
     for (controller, mut transform) in &mut movement_query {
         let velocity = controller.max_speed * controller.intent;
         transform.translation += velocity.extend(0.0) * time.delta_secs();
