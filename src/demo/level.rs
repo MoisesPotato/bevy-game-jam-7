@@ -6,10 +6,13 @@ use crate::{
     asset_tracking::LoadResource,
     demo::{player::PlayerAssets, sheep::sheep},
     screens::Screen,
+    theme::palette::RESURRECT_PALETTE,
 };
 
 pub(super) fn plugin(app: &mut App) {
     app.load_resource::<LevelAssets>();
+
+    app.add_systems(OnEnter(Screen::Gameplay), background);
 }
 
 #[derive(Resource, Asset, Clone, Reflect)]
@@ -56,4 +59,9 @@ pub fn spawn_level(
             ChildOf(level),
         ));
     }
+}
+
+fn background(mut clear_color: ResMut<ClearColor>) {
+    info!("Change color");
+    *clear_color = ClearColor(RESURRECT_PALETTE[35]);
 }
