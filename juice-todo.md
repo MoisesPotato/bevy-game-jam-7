@@ -1,2 +1,6 @@
 - Effect for ego switch
 - Effect for when the player ate a cabbage
+- Boost button
+- Wolf
+- Intro
+- Multiplayer

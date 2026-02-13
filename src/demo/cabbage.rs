@@ -9,6 +9,7 @@ use crate::{
     asset_tracking::LoadResource,
     camera::{GAME_HEIGHT, GAME_WIDTH},
     demo::{level::Level, movement::HumanMind, sheep::Sheep},
+    theme::palette::RESURRECT_PALETTE,
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -19,7 +20,13 @@ pub(super) fn plugin(app: &mut App) {
             .in_set(AppSystems::Update)
             .in_set(PausableSystems),
     );
+
+    app.insert_resource(Score(0));
 }
+
+#[derive(Resource, Reflect, Debug, Default)]
+#[reflect(Resource)]
+pub struct Score(u64);
 
 impl FromWorld for CabbageAssets {
     fn from_world(world: &mut World) -> Self {
@@ -51,7 +58,7 @@ pub struct CabbageTimer(Timer);
 
 const SECONDS_TO_CABBAGE: f32 = 3.;
 const SPAWN_CHANCE: f32 = 0.8;
-const MAX_NUMBER: usize = 3;
+const MAX_NUMBER: usize = 5;
 
 impl Default for CabbageTimer {
     fn default() -> Self {
@@ -116,11 +123,12 @@ pub fn eat(
     mut commands: Commands,
     cabbages: Query<(Entity, &Transform), With<Cabbage>>,
     sheep: Query<(&Transform, Option<&HumanMind>), With<Sheep>>,
+    mut score: ResMut<Score>,
 ) {
     for (id, transform) in cabbages {
         let position = transform.translation;
 
-        for (transform, _mind) in sheep {
+        for (transform, mind) in sheep {
             let sheep_pos = transform.translation;
 
             let dist = (position.x - sheep_pos.x).abs() + (position.y - sheep_pos.y).abs();
@@ -128,8 +136,35 @@ pub fn eat(
                 continue;
             }
 
+            if mind.is_some() {
+                score.0 += 1;
+            }
+
             commands.entity(id).despawn();
             break;
         }
     }
+}
+
+#[derive(Component, Reflect, Debug)]
+#[reflect(Component)]
+struct ScoreUI;
+
+pub fn spawn_score(commands: &mut Commands, level: Entity) {
+    commands
+        .spawn((
+            Transform::default(),
+            Name::new("Score UI"),
+            Text::new("Score: "),
+            TextFont::from_font_size(24.),
+            Node {
+                position_type: PositionType::Absolute,
+                top: px(12),
+                right: px(12),
+                ..Default::default()
+            },
+            TextColor(RESURRECT_PALETTE[9]),
+            ChildOf(level),
+        ))
+        .with_child((TextSpan::new("0"), ScoreUI));
 }

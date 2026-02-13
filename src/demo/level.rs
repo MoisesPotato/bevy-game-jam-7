@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::{
     asset_tracking::LoadResource,
-    demo::{player::PlayerAssets, sheep::sheep},
+    demo::{cabbage::spawn_score, player::PlayerAssets, sheep::sheep},
     screens::Screen,
     theme::palette::RESURRECT_PALETTE,
 };
@@ -50,6 +50,15 @@ pub fn spawn_level(
             Transform::default(),
             Visibility::default(),
             Level,
+            Node {
+                position_type: PositionType::Absolute,
+                width: percent(100),
+                height: percent(100),
+                row_gap: px(20),
+                ..default()
+            },
+            // Don't block picking events for other UI roots.
+            Pickable::IGNORE,
             DespawnOnExit(Screen::Gameplay),
             // children![(
             //     Name::new("Gameplay Music"),
@@ -64,6 +73,8 @@ pub fn spawn_level(
             ChildOf(level),
         ));
     }
+
+    spawn_score(&mut commands, level);
 }
 
 fn background(mut clear_color: ResMut<ClearColor>) {
