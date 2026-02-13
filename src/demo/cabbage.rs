@@ -89,7 +89,7 @@ pub fn spawn(
     let position_y = rng.random_range(0_f32..720.);
     let transform = Transform {
         translation: Vec3::new(position_x, position_y, 0.),
-        scale: Vec2::splat(2.).extend(0.),
+        scale: Vec2::splat(1.).extend(0.),
         ..Default::default()
     };
 

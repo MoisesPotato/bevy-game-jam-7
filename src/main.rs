@@ -7,12 +7,14 @@
     clippy::needless_pass_by_value,
     clippy::suboptimal_flops,
     clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
     // This one is just bugged
     clippy::used_underscore_binding
 )]
 
 mod asset_tracking;
 mod audio;
+mod camera;
 mod demo;
 #[cfg(feature = "dev")]
 mod dev_tools;
@@ -42,13 +44,14 @@ impl Plugin for AppPlugin {
                 })
                 .set(WindowPlugin {
                     primary_window: Window {
-                        title: "Jam".to_string(),
+                        title: "Which Sheep".to_string(),
                         fit_canvas_to_parent: true,
                         ..default()
                     }
                     .into(),
                     ..default()
-                }),
+                })
+                .set(ImagePlugin::default_nearest()),
         );
 
         // Add other plugins.
@@ -61,6 +64,7 @@ impl Plugin for AppPlugin {
             menus::plugin,
             screens::plugin,
             theme::plugin,
+            camera::plugin,
         ));
 
         // Order new `AppSystems` variants by adding them here:
@@ -77,9 +81,6 @@ impl Plugin for AppPlugin {
         // Set up the `Pause` state.
         app.init_state::<Pause>();
         app.configure_sets(Update, PausableSystems.run_if(in_state(Pause(false))));
-
-        // Spawn the main camera.
-        app.add_systems(Startup, spawn_camera);
     }
 }
 
@@ -103,7 +104,3 @@ struct Pause(pub bool);
 /// A system set for systems that shouldn't run while the game is paused.
 #[derive(SystemSet, Copy, Clone, Eq, PartialEq, Hash, Debug)]
 struct PausableSystems;
-
-fn spawn_camera(mut commands: Commands) {
-    commands.spawn((Name::new("Camera"), Camera2d));
-}

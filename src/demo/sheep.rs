@@ -11,6 +11,7 @@ use rand::{Rng, rng};
 use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
+    camera::GAME_HEIGHT,
     demo::{
         animation::SheepAnimation,
         movement::ScreenWrap,
@@ -159,7 +160,7 @@ pub fn sheep(
 
     let mut rng = rng();
     let angle = 2. * PI * rng.random::<f32>();
-    let distance = 250. * (1. - rng.random::<f32>().powi(2));
+    let distance = GAME_HEIGHT / 4. * (1. - rng.random::<f32>().powi(2));
     let pos = distance * Vec2::from_angle(angle);
 
     (
@@ -185,16 +186,16 @@ pub fn sheep(
         Transform {
             translation: pos.extend(0.),
             rotation: Quat::IDENTITY,
-            scale: Vec2::splat(2.).extend(1.),
+            scale: Vec2::splat(1.).extend(1.),
         },
         ScreenWrap,
         player_animation,
     )
 }
 
-const RANGE: f32 = 300.;
-const AVOID_RANGE: f32 = 100.;
-const COLLISION_DISTANCE: f32 = 50.;
+const RANGE: f32 = 150.;
+const AVOID_RANGE: f32 = 50.;
+const COLLISION_DISTANCE: f32 = 25.;
 
 fn collision(
     mut sheep: Query<(Entity, &mut Transform), With<Sheep>>,
