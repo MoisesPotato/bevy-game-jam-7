@@ -43,7 +43,7 @@ fn bleat(
     let rng = &mut rand::rng();
     let random_bleat = assets.bleats.choose(rng).unwrap().clone();
     let sound_id = commands
-        .spawn((sound_effect(random_bleat), BleatSound {}))
+        .spawn((sound_effect(random_bleat, 0.4), BleatSound {}))
         .id();
 
     recent

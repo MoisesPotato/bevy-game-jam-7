@@ -140,7 +140,7 @@ fn trigger_step_sound_effect(
         {
             let rng = &mut rand::rng();
             let random_step = player_assets.steps.choose(rng).unwrap().clone();
-            commands.spawn(sound_effect(random_step));
+            commands.spawn(sound_effect(random_step, 0.8));
         }
     }
 }

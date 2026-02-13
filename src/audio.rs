@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{audio::Volume, prelude::*};
 
 pub fn plugin(app: &mut App) {
     app.add_systems(
@@ -29,8 +29,15 @@ pub fn music(handle: Handle<AudioSource>) -> impl Bundle {
 pub struct SoundEffect;
 
 /// A sound effect audio instance.
-pub fn sound_effect(handle: Handle<AudioSource>) -> impl Bundle {
-    (AudioPlayer(handle), PlaybackSettings::DESPAWN, SoundEffect)
+pub fn sound_effect(handle: Handle<AudioSource>, volume: f32) -> impl Bundle {
+    (
+        AudioPlayer(handle),
+        PlaybackSettings {
+            volume: Volume::Linear(volume),
+            ..PlaybackSettings::DESPAWN
+        },
+        SoundEffect,
+    )
 }
 
 /// [`GlobalVolume`] doesn't apply to already-running audio entities, so this system will update them.
