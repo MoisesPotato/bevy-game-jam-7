@@ -8,10 +8,13 @@ use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
     camera::{GAME_HEIGHT, GAME_WIDTH},
-    demo::level::Level,
+    demo::{level::Level, wolf::halo::HaloMaterial},
 };
 
+mod halo;
+
 pub fn plugin(app: &mut App) {
+    app.init_asset::<HaloMaterial>();
     app.load_resource::<WolfAssets>();
     app.add_systems(
         Update,
@@ -30,6 +33,8 @@ impl FromWorld for WolfAssets {
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
+            halo_mesh: assets.add(Rectangle::new(50., 50.).into()),
+            halo_mat: assets.add(HaloMaterial::default()),
         }
     }
 }
@@ -39,6 +44,10 @@ impl FromWorld for WolfAssets {
 pub struct WolfAssets {
     #[dependency]
     pub wolf: Handle<Image>,
+    #[dependency]
+    pub halo_mesh: Handle<Mesh>,
+    #[dependency]
+    pub halo_mat: Handle<HaloMaterial>,
 }
 
 #[derive(Component, Reflect, Debug)]
@@ -48,7 +57,7 @@ pub struct Wolf;
 pub struct WolfSpawnStatus(Timer);
 
 #[cfg(feature = "dev")]
-const SECONDS_TO_SPAWN: f32 = 1.;
+const SECONDS_TO_SPAWN: f32 = 0.2;
 #[cfg(not(feature = "dev"))]
 const SECONDS_TO_SPAWN: f32 = 5.;
 const MAX_NUMBER: usize = 1;
@@ -93,11 +102,17 @@ fn spawn(
         ..Default::default()
     };
 
-    commands.spawn((
-        Name::new("Wolf"),
-        transform,
-        Wolf,
-        Sprite::from_image(assets.wolf.clone()),
-        ChildOf(level),
-    ));
+    commands
+        .spawn((
+            Name::new("Wolf"),
+            transform,
+            Wolf,
+            Sprite::from_image(assets.wolf.clone()),
+            ChildOf(level),
+        ))
+        .with_child((
+            Transform::from_translation(Vec3::new(0., 0., 2.)),
+            Mesh2d(assets.halo_mesh.clone()),
+            MeshMaterial2d(assets.halo_mat.clone()),
+        ));
 }
