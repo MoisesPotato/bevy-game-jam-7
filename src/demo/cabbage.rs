@@ -8,14 +8,16 @@ use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
     camera::{GAME_HEIGHT, GAME_WIDTH},
-    demo::level::Level,
+    demo::{level::Level, movement::HumanMind, sheep::Sheep},
 };
 
 pub(super) fn plugin(app: &mut App) {
     app.load_resource::<CabbageAssets>();
     app.add_systems(
         Update,
-        spawn.in_set(AppSystems::Update).in_set(PausableSystems),
+        (spawn, eat)
+            .in_set(AppSystems::Update)
+            .in_set(PausableSystems),
     );
 }
 
@@ -105,4 +107,29 @@ pub fn spawn(
         Sprite::from_image(assets.cabbage.clone()),
         ChildOf(level),
     ));
+}
+
+/// This is taxicab distance
+const EAT_BOX: f32 = 16.;
+
+pub fn eat(
+    mut commands: Commands,
+    cabbages: Query<(Entity, &Transform), With<Cabbage>>,
+    sheep: Query<(&Transform, Option<&HumanMind>), With<Sheep>>,
+) {
+    for (id, transform) in cabbages {
+        let position = transform.translation;
+
+        for (transform, _mind) in sheep {
+            let sheep_pos = transform.translation;
+
+            let dist = (position.x - sheep_pos.x).abs() + (position.y - sheep_pos.y).abs();
+            if dist > EAT_BOX {
+                continue;
+            }
+
+            commands.entity(id).despawn();
+            break;
+        }
+    }
 }
