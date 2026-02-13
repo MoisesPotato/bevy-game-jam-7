@@ -13,6 +13,9 @@ impl Default for JumpTimer {
     }
 }
 
+const JUMP_TIME_MIN: f32 = 2.;
+const JUMP_TIME_MAX: f32 = 5.;
+
 pub fn jump(
     commands: Commands,
     time: Res<Time>,
@@ -25,9 +28,9 @@ pub fn jump(
         return;
     }
 
-    timer
-        .0
-        .set_duration(Duration::from_millis(rng().random_range(1000..3000)));
+    timer.0.set_duration(Duration::from_secs_f32(
+        rng().random_range(JUMP_TIME_MIN..JUMP_TIME_MAX),
+    ));
     timer.0.reset();
 
     player::choose(commands, sheep);
