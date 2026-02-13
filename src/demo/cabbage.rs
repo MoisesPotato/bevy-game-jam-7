@@ -20,6 +20,13 @@ pub(super) fn plugin(app: &mut App) {
             .in_set(AppSystems::Update)
             .in_set(PausableSystems),
     );
+    app.add_systems(
+        Update,
+        update_score
+            .run_if(resource_changed::<Score>)
+            .in_set(AppSystems::Update)
+            .in_set(PausableSystems),
+    );
 
     app.insert_resource(Score(0));
 }
@@ -69,7 +76,7 @@ impl Default for CabbageTimer {
     }
 }
 
-pub fn spawn(
+fn spawn(
     mut commands: Commands,
     mut timer: Local<CabbageTimer>,
     time: Res<Time>,
@@ -119,7 +126,7 @@ pub fn spawn(
 /// This is taxicab distance
 const EAT_BOX: f32 = 16.;
 
-pub fn eat(
+fn eat(
     mut commands: Commands,
     cabbages: Query<(Entity, &Transform), With<Cabbage>>,
     sheep: Query<(&Transform, Option<&HumanMind>), With<Sheep>>,
@@ -167,4 +174,10 @@ pub fn spawn_score(commands: &mut Commands, level: Entity) {
             ChildOf(level),
         ))
         .with_child((TextSpan::new("0"), ScoreUI));
+}
+
+fn update_score(score: Res<Score>, ui: Query<&mut TextSpan, With<ScoreUI>>) {
+    for mut text in ui {
+        *text = TextSpan::new((score.0).to_string());
+    }
 }
