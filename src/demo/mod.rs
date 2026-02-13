@@ -6,6 +6,7 @@
 use bevy::prelude::*;
 
 mod animation;
+pub mod cabbage;
 pub mod level;
 mod movement;
 pub mod player;
@@ -18,5 +19,6 @@ pub fn plugin(app: &mut App) {
         movement::plugin,
         player::plugin,
         sheep::plugin,
+        cabbage::plugin,
     ));
 }

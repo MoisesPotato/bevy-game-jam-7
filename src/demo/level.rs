@@ -33,6 +33,10 @@ impl FromWorld for LevelAssets {
 
 const N_SHEEP: u8 = 50;
 
+#[derive(Component, Reflect, Debug)]
+#[reflect(Component)]
+pub struct Level;
+
 /// A system that spawns the main level.
 pub fn spawn_level(
     mut commands: Commands,
@@ -45,6 +49,7 @@ pub fn spawn_level(
             Name::new("Level"),
             Transform::default(),
             Visibility::default(),
+            Level,
             DespawnOnExit(Screen::Gameplay),
             // children![(
             //     Name::new("Gameplay Music"),
@@ -62,6 +67,5 @@ pub fn spawn_level(
 }
 
 fn background(mut clear_color: ResMut<ClearColor>) {
-    info!("Change color");
     *clear_color = ClearColor(RESURRECT_PALETTE[35]);
 }

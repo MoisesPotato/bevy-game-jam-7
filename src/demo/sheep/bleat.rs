@@ -21,7 +21,7 @@ const SHEEP_BLEAT_DELAY_SECS: f32 = 2.;
 pub fn with_b(
     mut commands: Commands,
     player_sheep: Query<(Entity, &mut RecentBleat), With<HumanMind>>,
-    assets: If<Res<SheepAssets>>,
+    assets: Res<SheepAssets>,
 ) {
     for (id, mut recent) in player_sheep {
         if !recent.time_to_bleat.is_finished() {
