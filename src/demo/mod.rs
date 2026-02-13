@@ -11,6 +11,7 @@ pub mod level;
 mod movement;
 pub mod player;
 pub mod sheep;
+pub mod wolf;
 
 pub fn plugin(app: &mut App) {
     app.add_plugins((
@@ -20,5 +21,6 @@ pub fn plugin(app: &mut App) {
         player::plugin,
         sheep::plugin,
         cabbage::plugin,
+        wolf::plugin,
     ));
 }
