@@ -4,7 +4,12 @@ use bevy::{
 };
 use rand::{Rng, rng};
 
-use crate::{AppSystems, PausableSystems, asset_tracking::LoadResource, demo::level::Level};
+use crate::{
+    AppSystems, PausableSystems,
+    asset_tracking::LoadResource,
+    camera::{GAME_HEIGHT, GAME_WIDTH},
+    demo::level::Level,
+};
 
 pub(super) fn plugin(app: &mut App) {
     app.load_resource::<CabbageAssets>();
@@ -85,8 +90,8 @@ pub fn spawn(
         return;
     }
 
-    let position_x = rng.random_range(0_f32..1280.);
-    let position_y = rng.random_range(0_f32..720.);
+    let position_x = rng.random_range((-GAME_WIDTH / 2. + 16.)..(GAME_WIDTH / 2. - 16.));
+    let position_y = rng.random_range((-GAME_HEIGHT / 2. + 16.)..(GAME_HEIGHT / 2. - 16.));
     let transform = Transform {
         translation: Vec3::new(position_x, position_y, 0.),
         scale: Vec2::splat(1.).extend(0.),
@@ -94,7 +99,9 @@ pub fn spawn(
     };
 
     commands.spawn((
+        Name::new("Cabbage"),
         transform,
+        Cabbage,
         Sprite::from_image(assets.cabbage.clone()),
         ChildOf(level),
     ));
