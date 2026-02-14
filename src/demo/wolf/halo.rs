@@ -4,23 +4,23 @@ use bevy::prelude::*;
 use bevy::reflect::TypePath;
 use bevy::render::render_resource::AsBindGroup;
 use bevy::shader::ShaderRef;
-use bevy::sprite_render::Material2d;
+use bevy::sprite_render::{AlphaMode2d, Material2d};
 
 // This is the struct that will be passed to your shader
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct HaloMaterial {
     #[uniform(0)]
-    color: LinearRgba,
+    pub color: LinearRgba,
     #[texture(1)]
     #[sampler(2)]
-    color_texture: Option<Handle<Image>>,
+    pub color_texture: Option<Handle<Image>>,
 }
 
-impl Default for HaloMaterial {
-    fn default() -> Self {
+impl HaloMaterial {
+    pub const fn new(image: Handle<Image>) -> Self {
         Self {
-            color: LinearRgba::new(1., 0., 0., 1.),
-            color_texture: None,
+            color: LinearRgba::BLUE,
+            color_texture: Some(image),
         }
     }
 }
@@ -32,7 +32,7 @@ impl Material2d for HaloMaterial {
         "shaders/halo_material.wgsl".into()
     }
 
-    // fn alpha_mode(&self) -> AlphaMode2d {
-    //     AlphaMode2d::Mask(0.5)
-    // }
+    fn alpha_mode(&self) -> AlphaMode2d {
+        AlphaMode2d::Mask(0.5)
+    }
 }

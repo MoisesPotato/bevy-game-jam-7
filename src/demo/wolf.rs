@@ -1,6 +1,7 @@
 use bevy::{
     image::{ImageLoaderSettings, ImageSampler},
     prelude::*,
+    sprite_render::Material2dPlugin,
 };
 use rand::{Rng, rng};
 
@@ -15,6 +16,7 @@ mod halo;
 
 pub fn plugin(app: &mut App) {
     app.init_asset::<HaloMaterial>();
+    app.add_plugins(Material2dPlugin::<HaloMaterial>::default());
     app.load_resource::<WolfAssets>();
     app.add_systems(
         Update,
@@ -33,8 +35,8 @@ impl FromWorld for WolfAssets {
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
-            halo_mesh: assets.add(Rectangle::new(50., 50.).into()),
-            halo_mat: assets.add(HaloMaterial::default()),
+            halo_mesh: assets.add(Rectangle::new(1., 1.).into()),
+            halo_mat: assets.add(HaloMaterial::new(assets.load("images/cabbage.png"))),
         }
     }
 }
@@ -111,7 +113,11 @@ fn spawn(
             ChildOf(level),
         ))
         .with_child((
-            Transform::from_translation(Vec3::new(0., 0., 2.)),
+            Transform {
+                translation: Vec3::new(0., 0., 2.),
+                scale: Vec3::splat(50.),
+                rotation: Quat::default(),
+            },
             Mesh2d(assets.halo_mesh.clone()),
             MeshMaterial2d(assets.halo_mat.clone()),
         ));
