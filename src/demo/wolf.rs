@@ -11,7 +11,8 @@ use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
     camera::{GAME_HEIGHT, GAME_WIDTH},
-    demo::{level::Level, sheep::Sheep, wolf::halo::HaloMaterial},
+    demo::{level::Level, movement::HumanMind, sheep::Sheep, wolf::halo::HaloMaterial},
+    screens::Screen,
 };
 
 mod halo;
@@ -155,18 +156,19 @@ fn think_eat(
     mut commands: Commands,
     time: Res<Time>,
     wolf: Query<(&Transform, &mut Wolf)>,
-    sheep: Query<(Entity, &Transform), With<Sheep>>,
+    sheep: Query<(Entity, &Transform, Option<&HumanMind>), With<Sheep>>,
+    mut next_screen: ResMut<NextState<Screen>>,
 ) {
     for (transf, mut wolf) in wolf {
         wolf.time_left.tick(time.delta());
 
         let pos = transf.translation.xy();
-        let Some((id, dist)) = sheep
+        let Some((id, dist, human)) = sheep
             .into_iter()
-            .map(|(id, t)| {
+            .map(|(id, t, h)| {
                 let sheep = t.translation.xy();
                 let dist = (pos - sheep).length();
-                (id, dist as u32)
+                (id, dist as u32, h.is_some())
             })
             .min_by(|x, y| x.1.partial_cmp(&y.1).unwrap_or(Ordering::Equal))
         else {
@@ -180,7 +182,9 @@ fn think_eat(
             wolf.time_left
                 .set_duration(Duration::from_secs_f32(THINK_INTERVAL_FULL));
             wolf.time_left.reset();
-            // TODO game over
+            if human {
+                next_screen.set(Screen::GameOver);
+            }
         } else if wolf.time_left.just_finished() {
             wolf.time_left
                 .set_duration(Duration::from_secs_f32(THINK_INTERVAL_HUNGRY));
