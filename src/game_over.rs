@@ -14,7 +14,7 @@ fn spawn(mut commands: Commands, score: Res<Score>) {
         children![
             widget::header("Game Over"),
             widget::label(format!("We ate {} cabbage", score.0)),
-            widget::button("Restart (TODO)", restart),
+            widget::button("Restart", restart),
             widget::button("Main Menu", to_menu),
         ],
     ));
@@ -24,7 +24,6 @@ fn to_menu(_: On<Pointer<Click>>, mut next_screen: ResMut<NextState<Screen>>) {
     next_screen.set(Screen::Title);
 }
 
-fn restart(_: On<Pointer<Click>>, _next_screen: ResMut<NextState<Screen>>) {
-    error!("TODO");
-    // Todo
+fn restart(_: On<Pointer<Click>>, mut next_screen: ResMut<NextState<Screen>>) {
+    next_screen.set(Screen::Gameplay);
 }
