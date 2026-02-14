@@ -33,7 +33,7 @@ pub(super) fn plugin(app: &mut App) {
 
 #[derive(Resource, Reflect, Debug, Default)]
 #[reflect(Resource)]
-pub struct Score(u64);
+pub struct Score(pub u64);
 
 impl FromWorld for CabbageAssets {
     fn from_world(world: &mut World) -> Self {
