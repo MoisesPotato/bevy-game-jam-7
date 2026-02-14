@@ -64,7 +64,7 @@ pub struct WolfAssets {
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 pub struct Wolf {
-    prey: Option<Vec2>,
+    prey: Option<Entity>,
     time_left: Timer,
 }
 
@@ -161,14 +161,14 @@ fn think_eat(
         wolf.time_left.tick(time.delta());
 
         let pos = transf.translation.xy();
-        let Some((id, closest_sheep, dist)) = sheep
+        let Some((id, dist)) = sheep
             .into_iter()
             .map(|(id, t)| {
                 let sheep = t.translation.xy();
                 let dist = (pos - sheep).length();
-                (id, sheep, dist as u32)
+                (id, dist as u32)
             })
-            .min_by(|x, y| x.2.partial_cmp(&y.2).unwrap_or(Ordering::Equal))
+            .min_by(|x, y| x.1.partial_cmp(&y.1).unwrap_or(Ordering::Equal))
         else {
             error!("No sheep");
             return;
@@ -185,21 +185,27 @@ fn think_eat(
             wolf.time_left
                 .set_duration(Duration::from_secs_f32(THINK_INTERVAL_HUNGRY));
             // Consider making it the sheep id
-            wolf.prey = Some(closest_sheep);
+            wolf.prey = Some(id);
         }
     }
 }
 
 const SPEED: f32 = 100.;
 
-fn hunt(time: Res<Time>, wolf: Query<(&mut Transform, &Wolf)>) {
-    for (mut transform, think) in wolf {
+fn hunt(
+    time: Res<Time>,
+    wolf: Query<(&mut Transform, &mut Wolf)>,
+    sheep: Query<&Transform, Without<Wolf>>,
+) {
+    for (mut transform, mut think) in wolf {
         let Some(prey) = think.prey else {
             continue;
         };
-        let target = (prey - transform.translation.xy())
-            .extend(0.)
-            .normalize_or_zero();
+        let Ok(prey) = sheep.get(prey) else {
+            think.prey = None;
+            continue;
+        };
+        let target = (prey.translation - transform.translation).normalize_or_zero();
 
         transform.translation += target * SPEED * time.delta_secs();
     }
