@@ -5,3 +5,7 @@
 - Intro
 - Multiplayer
 - Getting eaten effect
+- Fix bleat overlapping
+- Reset score on restart
+- Sheep survival instinct
+- Respawn sheep

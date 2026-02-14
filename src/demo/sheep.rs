@@ -53,6 +53,8 @@ pub fn plugin(app: &mut App) {
     );
 
     app.add_systems(Update, bleat::despawn_image.in_set(AppSystems::Update));
+
+    app.add_plugins(ego::plugin);
 }
 
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
