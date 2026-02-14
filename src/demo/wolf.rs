@@ -35,7 +35,7 @@ impl FromWorld for WolfAssets {
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
-            halo_mesh: assets.add(Rectangle::new(1., 1.).into()),
+            halo_mesh: assets.add(Circle::new(1.).into()),
             halo_mat: assets.add(HaloMaterial::new(assets.load("images/cabbage.png"))),
         }
     }
@@ -114,8 +114,8 @@ fn spawn(
         ))
         .with_child((
             Transform {
-                translation: Vec3::new(0., 0., 2.),
-                scale: Vec3::splat(50.),
+                translation: Vec3::new(0., 0., -1.),
+                scale: Vec2::splat(40.).extend(0.),
                 rotation: Quat::default(),
             },
             Mesh2d(assets.halo_mesh.clone()),

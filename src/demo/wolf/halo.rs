@@ -6,20 +6,22 @@ use bevy::render::render_resource::AsBindGroup;
 use bevy::shader::ShaderRef;
 use bevy::sprite_render::{AlphaMode2d, Material2d};
 
+use crate::theme::palette::RESURRECT_PALETTE;
+
 // This is the struct that will be passed to your shader
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct HaloMaterial {
     #[uniform(0)]
-    pub color: LinearRgba,
+    pub background_color: LinearRgba,
     #[texture(1)]
     #[sampler(2)]
     pub color_texture: Option<Handle<Image>>,
 }
 
 impl HaloMaterial {
-    pub const fn new(image: Handle<Image>) -> Self {
+    pub fn new(image: Handle<Image>) -> Self {
         Self {
-            color: LinearRgba::BLUE,
+            background_color: RESURRECT_PALETTE[35].into(),
             color_texture: Some(image),
         }
     }
@@ -33,6 +35,6 @@ impl Material2d for HaloMaterial {
     }
 
     fn alpha_mode(&self) -> AlphaMode2d {
-        AlphaMode2d::Mask(0.5)
+        AlphaMode2d::Opaque
     }
 }

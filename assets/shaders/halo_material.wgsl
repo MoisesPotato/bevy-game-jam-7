@@ -18,11 +18,27 @@
 //     #endif
 // }
 
-@group(#{MATERIAL_BIND_GROUP}) @binding(0) var<uniform> material_color: vec4<f32>;
+@group(#{MATERIAL_BIND_GROUP}) @binding(0) var<uniform> bg_color: vec4<f32>;
 @group(#{MATERIAL_BIND_GROUP}) @binding(1) var base_color_texture: texture_2d<f32>;
 @group(#{MATERIAL_BIND_GROUP}) @binding(2) var base_color_sampler: sampler;
 
 @fragment
 fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
-    return vec4(mesh.uv.x,mesh.uv.y,0.,1.);
+    const black = vec4(0.,0.,0.,1);
+    const red = vec4(1.,0.,0.,1);
+
+    let x = mesh.uv.x;
+    let y = mesh.uv.y;
+    let angle = atan2(x - 0.5, y - 0.5);
+    let angle_adjust = sin(angle * 5.) + cos(angle * 3.) * 0.7 + sin(angle * 7.) * 0.4;
+    // return vec4(angle_adjust, 0., 0.,0.);
+    let d_sq = 4. * ((x - 0.5) * (x - 0.5) + (y - 0.5) * (y - 0.5));
+    var t = d_sq * (4 * sqrt(d_sq) - 1.3);
+    // return vec4(t, 0.,0.,0.);
+    t = t + angle_adjust * t * 0.3;
+    t = clamp(t, 0., 1.);
+
+    var s = clamp(4. * (t - 0.1) * (0.4 - t) + 0.1 * sin(angle * 4.), 0, 1) ;
+
+    return t * bg_color + s * red ;// + (1 - t - s) * black; 
 }
