@@ -84,8 +84,6 @@ fn record_player_directional_input(
 pub struct PlayerAssets {
     #[dependency]
     pub sheep: Handle<Image>,
-    #[dependency]
-    pub steps: Vec<Handle<AudioSource>>,
 }
 
 impl FromWorld for PlayerAssets {
@@ -99,12 +97,6 @@ impl FromWorld for PlayerAssets {
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
-            steps: vec![
-                assets.load("audio/sound_effects/step1.ogg"),
-                assets.load("audio/sound_effects/step2.ogg"),
-                assets.load("audio/sound_effects/step3.ogg"),
-                assets.load("audio/sound_effects/step4.ogg"),
-            ],
         }
     }
 }

@@ -5,15 +5,12 @@
 //! - [Timers](https://github.com/bevyengine/bevy/blob/latest/examples/time/timers.rs)
 
 use bevy::prelude::*;
-use rand::prelude::*;
 use std::time::Duration;
 
 use crate::{
     AppSystems, PausableSystems,
-    audio::sound_effect,
     demo::{
         movement::HumanMind,
-        player::PlayerAssets,
         sheep::{self, SheepMind, bleat::BleatImage, bleat::SOUND_DIST},
     },
 };
@@ -28,7 +25,6 @@ pub(super) fn plugin(app: &mut App) {
                 update_animation_movement::<HumanMind>,
                 update_animation_movement::<SheepMind>,
                 update_animation_atlas,
-                trigger_step_sound_effect,
                 flip_bleat_sound,
             )
                 .chain()
@@ -122,25 +118,6 @@ fn update_animation_atlas(mut query: Query<(&SheepAnimation, &mut Sprite)>) {
         };
         if animation.changed() {
             atlas.index = animation.get_atlas_index();
-        }
-    }
-}
-
-/// If the player is moving, play a step sound effect synchronized with the
-/// animation.
-fn trigger_step_sound_effect(
-    mut commands: Commands,
-    player_assets: If<Res<PlayerAssets>>,
-    mut step_query: Query<&SheepAnimation, With<HumanMind>>,
-) {
-    for animation in &mut step_query {
-        if animation.state == PlayerAnimationState::Walking
-            && animation.changed()
-            && (animation.frame == 2 || animation.frame == 5)
-        {
-            let rng = &mut rand::rng();
-            let random_step = player_assets.steps.choose(rng).unwrap().clone();
-            commands.spawn(sound_effect(random_step, 0.8));
         }
     }
 }
