@@ -14,8 +14,8 @@ use crate::{
     camera::GAME_HEIGHT,
     demo::{
         animation::SheepAnimation,
-        movement::ScreenWrap,
-        player::{Player, PlayerAssets},
+        movement::{HumanMind, ScreenWrap},
+        player::PlayerAssets,
     },
     screens::Screen,
 };
@@ -268,7 +268,7 @@ fn think(mut sheep: Query<(&Transform, &mut SheepMind)>, time: Res<Time>) {
     }
 }
 
-fn walk(sheep: Query<(&mut Transform, &SheepMind), Without<Player>>, time: Res<Time>) {
+fn walk(sheep: Query<(&mut Transform, &SheepMind), Without<HumanMind>>, time: Res<Time>) {
     for (mut transf, mind) in sheep {
         if let State::Moving { goal, speed, .. } = &mind.state {
             let speed = *speed

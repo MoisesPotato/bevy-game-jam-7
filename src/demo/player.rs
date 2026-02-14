@@ -9,7 +9,10 @@ use rand::{Rng, rng};
 use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
-    demo::{movement::HumanMind, sheep::Sheep},
+    demo::{
+        movement::HumanMind,
+        sheep::{Sheep, ego::ConfusionSpawner},
+    },
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -24,10 +27,19 @@ pub(super) fn plugin(app: &mut App) {
     );
 }
 
-pub fn choose(mut commands: Commands, sheep: Query<Entity, With<Sheep>>) {
+pub fn choose(
+    mut commands: Commands,
+    sheep: Query<(Entity, &Transform, Option<&HumanMind>), With<Sheep>>,
+) {
     let mut count = 0;
-    for id in sheep {
-        commands.entity(id).remove::<(Player, HumanMind)>();
+    for (id, pos, human) in sheep {
+        commands.entity(id).remove::<HumanMind>();
+        if human.is_some() {
+            commands.spawn((
+                Transform::from_translation(pos.translation),
+                ConfusionSpawner::default(),
+            ));
+        }
         count += 1;
     }
 
@@ -38,21 +50,17 @@ pub fn choose(mut commands: Commands, sheep: Query<Entity, With<Sheep>>) {
 
     let new_player = rng().random_range(0..count);
 
-    let Some(id) = sheep.iter().nth(new_player) else {
+    let Some((id, _, _)) = sheep.iter().nth(new_player) else {
         error!("Sheep somehow disappeared?");
         return;
     };
 
-    commands.entity(id).insert((Player, HumanMind::default()));
+    commands.entity(id).insert(HumanMind::default());
 }
-
-#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
-#[reflect(Component)]
-pub struct Player;
 
 fn record_player_directional_input(
     input: Res<ButtonInput<KeyCode>>,
-    mut controller_query: Query<&mut HumanMind, With<Player>>,
+    mut controller_query: Query<&mut HumanMind>,
 ) {
     // Collect directional input.
     let mut intent = Vec2::ZERO;
