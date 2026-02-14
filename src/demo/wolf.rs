@@ -1,3 +1,5 @@
+use std::{cmp::Ordering, time::Duration};
+
 use bevy::{
     image::{ImageLoaderSettings, ImageSampler},
     prelude::*,
@@ -9,7 +11,7 @@ use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
     camera::{GAME_HEIGHT, GAME_WIDTH},
-    demo::{level::Level, wolf::halo::HaloMaterial},
+    demo::{level::Level, sheep::Sheep, wolf::halo::HaloMaterial},
 };
 
 mod halo;
@@ -21,6 +23,13 @@ pub fn plugin(app: &mut App) {
     app.add_systems(
         Update,
         spawn.in_set(AppSystems::Update).in_set(PausableSystems),
+    );
+    app.add_systems(
+        Update,
+        (think_eat, hunt)
+            .chain()
+            .in_set(AppSystems::Update)
+            .in_set(PausableSystems),
     );
 }
 
@@ -54,7 +63,22 @@ pub struct WolfAssets {
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
-pub struct Wolf;
+pub struct Wolf {
+    prey: Option<Vec2>,
+    time_left: Timer,
+}
+
+impl Default for Wolf {
+    fn default() -> Self {
+        Self {
+            prey: None,
+            time_left: Timer::new(
+                Duration::from_secs_f32(THINK_INTERVAL_HUNGRY),
+                TimerMode::Repeating,
+            ),
+        }
+    }
+}
 
 pub struct WolfSpawnStatus(Timer);
 
@@ -108,7 +132,7 @@ fn spawn(
         .spawn((
             Name::new("Wolf"),
             transform,
-            Wolf,
+            Wolf::default(),
             Sprite::from_image(assets.wolf.clone()),
             ChildOf(level),
         ))
@@ -121,4 +145,62 @@ fn spawn(
             Mesh2d(assets.halo_mesh.clone()),
             MeshMaterial2d(assets.halo_mat.clone()),
         ));
+}
+
+const THINK_INTERVAL_HUNGRY: f32 = 0.5;
+const THINK_INTERVAL_FULL: f32 = 1.0;
+const EAT_RANGE: f32 = 16.;
+
+fn think_eat(
+    mut commands: Commands,
+    time: Res<Time>,
+    wolf: Query<(&Transform, &mut Wolf)>,
+    sheep: Query<(Entity, &Transform), With<Sheep>>,
+) {
+    for (transf, mut wolf) in wolf {
+        wolf.time_left.tick(time.delta());
+
+        let pos = transf.translation.xy();
+        let Some((id, closest_sheep, dist)) = sheep
+            .into_iter()
+            .map(|(id, t)| {
+                let sheep = t.translation.xy();
+                let dist = (pos - sheep).length();
+                (id, sheep, dist as u32)
+            })
+            .min_by(|x, y| x.2.partial_cmp(&y.2).unwrap_or(Ordering::Equal))
+        else {
+            error!("No sheep");
+            return;
+        };
+
+        if (dist as f32) < EAT_RANGE {
+            commands.entity(id).despawn();
+            wolf.prey = None;
+            wolf.time_left
+                .set_duration(Duration::from_secs_f32(THINK_INTERVAL_FULL));
+            wolf.time_left.reset();
+            // TODO game over
+        } else if wolf.time_left.just_finished() {
+            wolf.time_left
+                .set_duration(Duration::from_secs_f32(THINK_INTERVAL_HUNGRY));
+            // Consider making it the sheep id
+            wolf.prey = Some(closest_sheep);
+        }
+    }
+}
+
+const SPEED: f32 = 100.;
+
+fn hunt(time: Res<Time>, wolf: Query<(&mut Transform, &Wolf)>) {
+    for (mut transform, think) in wolf {
+        let Some(prey) = think.prey else {
+            continue;
+        };
+        let target = (prey - transform.translation.xy())
+            .extend(0.)
+            .normalize_or_zero();
+
+        transform.translation += target * SPEED * time.delta_secs();
+    }
 }

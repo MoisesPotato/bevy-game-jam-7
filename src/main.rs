@@ -7,6 +7,7 @@
     clippy::needless_pass_by_value,
     clippy::suboptimal_flops,
     clippy::cast_precision_loss,
+    clippy::cast_sign_loss,
     clippy::cast_possible_truncation,
     // This one is just bugged
     clippy::used_underscore_binding
