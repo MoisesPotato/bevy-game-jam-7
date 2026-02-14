@@ -1,6 +1,9 @@
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::prelude::*;
 
-use crate::{AppSystems, PausableSystems};
+use crate::{
+    AppSystems, PausableSystems,
+    camera::{GAME_HEIGHT, GAME_WIDTH},
+};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(
@@ -48,12 +51,9 @@ fn apply_movement(time: Res<Time>, mut movement_query: Query<(&HumanMind, &mut T
 #[reflect(Component)]
 pub struct ScreenWrap;
 
-fn apply_screen_wrap(
-    window: Single<&Window, With<PrimaryWindow>>,
-    mut wrap_query: Query<&mut Transform, With<ScreenWrap>>,
-) {
-    let size = window.size() + 256.0;
-    let half_size = size / 2.0;
+fn apply_screen_wrap(mut wrap_query: Query<&mut Transform, With<ScreenWrap>>) {
+    let size = Vec2::new(GAME_WIDTH, GAME_HEIGHT);
+    let half_size = Vec2::new(GAME_WIDTH, GAME_HEIGHT) / 2.;
     for mut transform in &mut wrap_query {
         let position = transform.translation.xy();
         let wrapped = (position + half_size).rem_euclid(size) - half_size;
