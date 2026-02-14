@@ -4,3 +4,4 @@
 - Show that wolf is sleeping
 - Intro
 - Multiplayer
+- Getting eaten effect
