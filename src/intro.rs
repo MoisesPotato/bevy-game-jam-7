@@ -3,7 +3,16 @@ use std::time::Duration;
 use bevy::prelude::*;
 
 use crate::{
-    PausableSystems, intro::message::MESSAGES, screens::Screen, theme::palette::RESURRECT_PALETTE,
+    PausableSystems,
+    demo::{
+        cabbage::{Cabbage, Score},
+        level::{Level, N_SHEEP},
+        player::PlayerAssets,
+        sheep::{Sheep, new_sheep},
+    },
+    intro::message::MESSAGES,
+    screens::Screen,
+    theme::palette::RESURRECT_PALETTE,
 };
 
 use message::Message;
@@ -22,6 +31,8 @@ pub fn plugin(app: &mut App) {
             .in_set(PausableSystems)
             .run_if(in_state(Screen::Intro)),
     );
+
+    app.add_systems(OnExit(Screen::Intro), reset_and_start);
 }
 
 #[derive(Resource, Reflect, Debug, Default)]
@@ -99,6 +110,7 @@ fn advance_intro(
     mut intro: Single<(Entity, &mut Intro)>,
     old_messages: Query<Entity, With<IntroText>>,
     mut pause: ResMut<IntroPause>,
+    mut next_state: ResMut<NextState<Screen>>,
 ) {
     if intro.1.paused {
         return;
@@ -117,7 +129,7 @@ fn advance_intro(
     intro.1.time_to_next_message.reset();
 
     let Some(message) = MESSAGES.get(intro.1.displayed_messages) else {
-        error!("TODO Done!!");
+        next_state.set(Screen::Gameplay);
         return;
     };
 
@@ -206,4 +218,29 @@ fn resume(
         intro.displayed_messages += 1;
         intro.paused = false;
     }
+}
+
+fn reset_and_start(
+    mut commands: Commands,
+    // level_assets: Res<LevelAssets>,
+    player_assets: Res<PlayerAssets>,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    level: Single<Entity, With<Level>>,
+    sheep: Query<(), With<Sheep>>,
+    cabbage: Query<Entity, With<Cabbage>>,
+    mut score: ResMut<Score>,
+) {
+    let sheep = sheep.count();
+    for _ in sheep..N_SHEEP {
+        commands.spawn((
+            new_sheep(&player_assets, &mut texture_atlas_layouts, Screen::Gameplay),
+            ChildOf(*level),
+        ));
+    }
+
+    for id in cabbage {
+        commands.entity(id).despawn();
+    }
+
+    score.0 = 0;
 }
