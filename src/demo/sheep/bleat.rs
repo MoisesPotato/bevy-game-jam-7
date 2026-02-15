@@ -6,7 +6,10 @@ use rand::{Rng, rng, seq::IndexedRandom};
 use crate::{
     audio::sound_effect,
     demo::{movement::HumanMind, sheep::SheepAssets},
+    intro::{IntroPause, Resume},
 };
+
+/// Tick bleat timers
 pub fn tick(time: Res<Time>, sheep: Query<&mut RecentBleat>) {
     for mut recent in sheep {
         recent.time_to_bleat.tick(time.delta());
@@ -22,12 +25,14 @@ pub fn with_b(
     mut commands: Commands,
     player_sheep: Query<(Entity, &mut RecentBleat), With<HumanMind>>,
     assets: Res<SheepAssets>,
+    mut writer: MessageWriter<Resume>,
 ) {
     for (id, mut recent) in player_sheep {
         if !recent.time_to_bleat.is_finished() {
             continue;
         }
         bleat(&mut commands, &assets, id, &mut recent, true);
+        writer.write(Resume(IntroPause::WaitBleat));
     }
 }
 

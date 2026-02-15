@@ -19,6 +19,7 @@ use crate::{
         movement::{HumanMind, ScreenWrap},
         player::PlayerAssets,
     },
+    intro::BleatEnabled,
     menus::PlayerAction,
     screens::Screen,
 };
@@ -52,7 +53,17 @@ pub fn plugin(app: &mut App) {
 
     app.add_systems(
         Update,
-        ((collision, think, walk).chain(), ego::jump)
+        (
+            (collision, think, walk).chain(),
+            ego::jump,
+            (
+                bleat::tick,
+                bleat::spread,
+                bleat::despawn_image,
+                bleat::with_b.run_if(just_pressed(PlayerAction::Bleat)),
+            )
+                .run_if(resource_exists::<BleatEnabled>),
+        )
             .in_set(AppSystems::Update)
             .run_if(in_state(Screen::Intro)),
     );
