@@ -9,6 +9,7 @@ use crate::{
     asset_tracking::LoadResource,
     camera::{GAME_HEIGHT, GAME_WIDTH},
     demo::{level::Level, movement::HumanMind, sheep::Sheep},
+    intro::{CabbageEnabled, IntroPause, Resume},
     screens::Screen,
     theme::palette::RESURRECT_PALETTE,
 };
@@ -19,6 +20,14 @@ pub(super) fn plugin(app: &mut App) {
         Update,
         (spawn, eat, update_score.run_if(resource_changed::<Score>))
             .run_if(in_state(Screen::Gameplay))
+            .in_set(AppSystems::Update)
+            .in_set(PausableSystems),
+    );
+    app.add_systems(
+        Update,
+        (spawn, eat, update_score.run_if(resource_changed::<Score>))
+            .run_if(in_state(Screen::Intro))
+            .run_if(resource_exists::<CabbageEnabled>)
             .in_set(AppSystems::Update)
             .in_set(PausableSystems),
     );
@@ -128,6 +137,7 @@ fn eat(
     cabbages: Query<(Entity, &Transform), With<Cabbage>>,
     sheep: Query<(&Transform, Option<&HumanMind>), With<Sheep>>,
     mut score: ResMut<Score>,
+    mut writer: MessageWriter<Resume>,
 ) {
     for (id, transform) in cabbages {
         let position = transform.translation;
@@ -141,6 +151,7 @@ fn eat(
             }
 
             if mind.is_some() {
+                writer.write(Resume(IntroPause::WaitEat));
                 score.0 += 1;
             }
 

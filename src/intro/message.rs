@@ -34,7 +34,7 @@ pub const MESSAGES: &[Message] = &[
     Message::new_clear("Press Space to express your individuality", 3.),
     Message::Pause,
     Message::new("Well done! Very individual", 3.),
-    Message::new("Press WASD to move around", 3.),
+    Message::new_clear("Press WASD to move around", 3.),
     Message::new("Do not express your individuality by pressing WASD", 2.),
     Message::new("We also express our individuality", 3.),
     Message::new_clear("We also like cabbage, it is our food", 3.),
