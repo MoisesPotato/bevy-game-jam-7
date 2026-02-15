@@ -6,13 +6,22 @@ use crate::{
     PausableSystems, intro::message::MESSAGES, screens::Screen, theme::palette::RESURRECT_PALETTE,
 };
 
+use message::Message;
+
 mod message;
 
 pub fn plugin(app: &mut App) {
     app.init_resource::<PlayedIntro>();
+    app.init_resource::<IntroPause>();
+    app.add_message::<Resume>();
 
     app.add_systems(OnEnter(Screen::Intro), spawn_intro);
-    app.add_systems(Update, advance_intro.in_set(PausableSystems));
+    app.add_systems(
+        Update,
+        (advance_intro, resume)
+            .in_set(PausableSystems)
+            .run_if(in_state(Screen::Intro)),
+    );
 }
 
 #[derive(Resource, Reflect, Debug, Default)]
@@ -24,6 +33,28 @@ pub struct PlayedIntro(pub bool);
 struct Intro {
     time_to_next_message: Timer,
     displayed_messages: usize,
+    next_pause: IntroPause,
+}
+
+#[derive(Resource, Reflect, Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[reflect(Resource)]
+pub enum IntroPause {
+    WaitBleat,
+    WaitEat,
+    #[default]
+    None,
+}
+impl IntroPause {
+    fn cycle(&mut self) {
+        match self {
+            Self::WaitBleat => *self = Self::WaitEat,
+            Self::WaitEat => *self = Self::None,
+            Self::None => {
+                error!("How did we get here?");
+                *self = Self::None;
+            }
+        }
+    }
 }
 
 fn spawn_intro(
@@ -55,6 +86,7 @@ fn spawn_intro(
         Intro {
             time_to_next_message: Timer::new(Duration::ZERO, TimerMode::Once),
             displayed_messages: 0,
+            next_pause: IntroPause::WaitBleat,
         },
     ));
 }
@@ -64,6 +96,7 @@ fn advance_intro(
     time: Res<Time>,
     mut intro: Single<(Entity, &mut Intro)>,
     old_messages: Query<Entity, With<IntroText>>,
+    mut pause: ResMut<IntroPause>,
 ) {
     intro.1.time_to_next_message.tick(time.delta());
 
@@ -82,26 +115,47 @@ fn advance_intro(
         return;
     };
 
-    intro
-        .1
-        .time_to_next_message
-        .set_duration(Duration::from_secs_f32(message.delay));
-    intro.1.time_to_next_message.reset();
-    intro.1.displayed_messages += 1;
+    match message {
+        Message::Text {
+            text,
+            clears_screen,
+            delay,
+        } => {
+            intro
+                .1
+                .time_to_next_message
+                .set_duration(Duration::from_secs_f32(*delay));
+            intro.1.time_to_next_message.reset();
+            intro.1.displayed_messages += 1;
 
-    commands.spawn((
-        Name::new("Intro Text"),
-        Text((message.text).into()),
-        TextFont::from_font_size(48.0),
-        TextLayout::new(Justify::Left, LineBreak::WordBoundary),
-        TextColor(RESURRECT_PALETTE[9]),
-        IntroText,
-        ChildOf(intro.0),
-    ));
+            commands.spawn((
+                Name::new("Intro Text"),
+                Text((*text).into()),
+                TextFont::from_font_size(48.0),
+                TextLayout::new(Justify::Left, LineBreak::WordBoundary),
+                TextColor(RESURRECT_PALETTE[9]),
+                IntroText,
+                ChildOf(intro.0),
+            ));
 
-    if message.clears_screen {
-        for id in old_messages {
-            commands.entity(id).despawn();
+            if *clears_screen {
+                for id in old_messages {
+                    commands.entity(id).despawn();
+                }
+            }
+        }
+        Message::Pause => {
+            *pause = intro.1.next_pause;
+            intro.1.next_pause.cycle();
+            match *pause {
+                IntroPause::WaitBleat => {
+                    commands.insert_resource(BleatEnabled);
+                }
+                IntroPause::WaitEat => {
+                    commands.insert_resource(CabbageEnabled);
+                }
+                IntroPause::None => {}
+            }
         }
     }
 }
@@ -109,3 +163,27 @@ fn advance_intro(
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 struct IntroText;
+
+#[derive(Resource, Reflect, Debug, Default)]
+#[reflect(Resource)]
+pub struct BleatEnabled;
+
+#[derive(Resource, Reflect, Debug, Default)]
+#[reflect(Resource)]
+pub struct CabbageEnabled;
+
+#[derive(Message)]
+pub struct Resume(pub IntroPause);
+
+fn resume(mut intro: Single<&mut Intro>, mut recv: MessageReader<Resume>, pause: Res<IntroPause>) {
+    for m in recv.read() {
+        if m.0 != *pause {
+            continue;
+        }
+        intro
+            .time_to_next_message
+            .set_duration(Duration::from_secs_f32(0.2));
+        intro.time_to_next_message.reset();
+        intro.displayed_messages += 1;
+    }
+}

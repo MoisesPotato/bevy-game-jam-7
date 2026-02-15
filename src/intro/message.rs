@@ -1,12 +1,15 @@
-pub struct Message {
-    pub text: &'static str,
-    pub clears_screen: bool,
-    pub delay: f32,
+pub enum Message {
+    Text {
+        text: &'static str,
+        clears_screen: bool,
+        delay: f32,
+    },
+    Pause,
 }
 
 impl Message {
     const fn new(text: &'static str, delay: f32) -> Self {
-        Self {
+        Self::Text {
             text,
             clears_screen: false,
             delay,
@@ -14,7 +17,7 @@ impl Message {
     }
 
     const fn new_clear(text: &'static str, delay: f32) -> Self {
-        Self {
+        Self::Text {
             text,
             clears_screen: true,
             delay,
@@ -29,10 +32,13 @@ pub const MESSAGES: &[Message] = &[
     Message::new("Yes, that is the which sheep we are", 2.),
     Message::new("This is clear to us, as sheep", 3.),
     Message::new_clear("Press Space to express your individuality", 3.),
+    Message::Pause,
+    Message::new_clear("Well done! Very individual", 3.),
     Message::new("Press WASD to move around", 3.),
     Message::new("Do not express your individuality by pressing WASD", 2.),
     Message::new("We also express our individuality", 1.),
     Message::new_clear("We also like cabbage, it is our food", 3.),
+    Message::Pause,
     Message::new("We are not food", 2.),
-    Message::new("We wish we happy sheep", 2.),
+    Message::new("We wish happy sheep to we", 2.),
 ];
