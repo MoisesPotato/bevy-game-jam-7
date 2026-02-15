@@ -76,7 +76,7 @@ fn grid() -> impl Bundle {
     )
 }
 
-#[derive(Clone, Copy, Reflect, Debug)]
+#[derive(Clone, Copy, Reflect, Debug, PartialEq, Eq)]
 enum KeyAction {
     Up,
     Down,
@@ -152,7 +152,11 @@ struct KeyChange {
     changing: bool,
 }
 
-fn start_change_key(event: On<Pointer<Click>>, buttons: Query<(Entity, &mut KeyChange)>) {
+fn start_change_key(
+    event: On<Pointer<Click>>,
+    buttons: Query<(Entity, &mut KeyChange)>,
+    labels: Query<(&mut Text, &KeyLabel), Without<KeyChange>>,
+) {
     let this_id = event.original_event_target();
 
     let Ok((_, button)) = buttons.get(this_id) else {
@@ -160,9 +164,22 @@ fn start_change_key(event: On<Pointer<Click>>, buttons: Query<(Entity, &mut KeyC
         return;
     };
 
-    if !button.changing {
-        for (button_id, mut state) in buttons {
-            state.changing = button_id == this_id;
+    let mut code = None;
+    if button.changing {
+        return;
+    }
+    for (button_id, mut state) in buttons {
+        state.changing = button_id == this_id;
+        if button_id == this_id {
+            code = Some(state.which);
+        }
+    }
+
+    if let Some(code) = code {
+        for (mut text, label) in labels {
+            if label.which == code {
+                text.0 = "Press a key...".into();
+            }
         }
     }
 }
