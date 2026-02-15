@@ -6,8 +6,8 @@ use crate::{asset_tracking::ResourceHandles, menus::Menu, screens::Screen, theme
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Menu::Main), spawn_main_menu);
-    // #[cfg(feature = "dev")]
-    // app.add_systems(OnEnter(Menu::Main), start_already);
+    #[cfg(feature = "dev")]
+    app.add_systems(OnEnter(Menu::Main), start_already);
 }
 
 fn spawn_main_menu(mut commands: Commands) {

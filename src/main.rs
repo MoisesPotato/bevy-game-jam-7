@@ -21,6 +21,7 @@ mod demo;
 #[cfg(feature = "dev")]
 mod dev_tools;
 mod game_over;
+mod intro;
 mod menus;
 mod screens;
 mod theme;
@@ -70,6 +71,7 @@ impl Plugin for AppPlugin {
             camera::plugin,
             game_over::plugin,
             controls::plugin,
+            intro::plugin,
         ));
 
         // Order new `AppSystems` variants by adding them here:

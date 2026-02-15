@@ -10,3 +10,4 @@
 - Rotate wolf halo over time
 - Figure out what to do with setting menu
 - Credits
+- Make player collision different
