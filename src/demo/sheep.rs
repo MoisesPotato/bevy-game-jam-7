@@ -73,6 +73,14 @@ pub fn plugin(app: &mut App) {
             .in_set(PausableSystems)
             .run_if(in_state(Screen::Gameplay)),
     );
+    // app.add_systems(
+    //     Update,
+    //     log_offscreen
+    //         .run_if(on_timer(Duration::from_secs_f32(0.2)))
+    //         .in_set(AppSystems::Update)
+    //         .in_set(PausableSystems)
+    //         .run_if(in_state(Screen::Gameplay)),
+    // );
 
     app.add_plugins(ego::plugin);
 }
@@ -361,20 +369,26 @@ fn sheep_at_edge(
     let (pos, speed) = if spawn_point < GAME_WIDTH {
         // Top
         (
-            Vec2::new(spawn_point, GAME_HEIGHT / 2. + DIST_FROM_EDGE),
+            Vec2::new(
+                spawn_point - GAME_WIDTH / 2.,
+                GAME_HEIGHT / 2. + DIST_FROM_EDGE,
+            ),
             Vec2::new(0., -1.),
         )
     } else if spawn_point < GAME_WIDTH + GAME_HEIGHT {
         // Right
         (
-            Vec2::new(GAME_WIDTH / 2. + DIST_FROM_EDGE, spawn_point - GAME_WIDTH),
+            Vec2::new(
+                GAME_WIDTH / 2. + DIST_FROM_EDGE,
+                spawn_point - GAME_WIDTH - GAME_HEIGHT / 2.,
+            ),
             Vec2::new(-1., 0.),
         )
     } else if spawn_point < 2. * GAME_WIDTH + GAME_HEIGHT {
         // Bottom
         (
             Vec2::new(
-                spawn_point - GAME_HEIGHT - GAME_WIDTH,
+                spawn_point - GAME_HEIGHT - GAME_WIDTH * 3. / 2.,
                 -GAME_HEIGHT / 2. - DIST_FROM_EDGE,
             ),
             Vec2::new(0., 1.),
@@ -384,7 +398,7 @@ fn sheep_at_edge(
         (
             Vec2::new(
                 -GAME_WIDTH / 2. - DIST_FROM_EDGE,
-                spawn_point - 2. * GAME_WIDTH - GAME_HEIGHT,
+                spawn_point - 2. * GAME_WIDTH - GAME_HEIGHT * 3. / 2.,
             ),
             Vec2::new(1., 0.),
         )
@@ -443,15 +457,56 @@ fn move_from_edge(
     for (id, mut transf, edge) in sheep {
         transf.translation += ENTER_SPEED * time.delta_secs() * edge.speed.extend(0.);
 
-        if -GAME_WIDTH / 2. <= transf.translation.x
-            && transf.translation.x <= GAME_WIDTH / 2.
-            && -GAME_HEIGHT / 2. <= transf.translation.y
-            && transf.translation.y <= GAME_HEIGHT / 2.
-        {
+        if in_bounds(transf.translation) {
             commands
                 .entity(id)
                 .remove::<SheepAtEdge>()
                 .insert((SheepMind::new_idle(), ScreenWrap));
         }
+    }
+}
+
+const PADDING: f32 = 20.;
+
+fn in_bounds(vec: Vec3) -> bool {
+    -GAME_WIDTH / 2. <= vec.x - PADDING
+        && vec.x + PADDING <= GAME_WIDTH / 2.
+        && -GAME_HEIGHT / 2. <= vec.y - PADDING
+        && vec.y + PADDING <= GAME_HEIGHT / 2.
+}
+
+fn _log_offscreen(
+    sheep: Query<(Entity, &mut Transform), With<Sheep>>,
+    mut tracked_id: Local<Option<Entity>>,
+) {
+    if let Some(tracked) = *tracked_id {
+        if let Ok((_, t)) = sheep.get(tracked) {
+            if in_bounds(t.translation) {
+                info!("Went back in!");
+                *tracked_id = None;
+            } else {
+                info!(x = t.translation.x, y = t.translation.y);
+            }
+        } else {
+            *tracked_id = None;
+        }
+    }
+
+    let mut out_of_bounds_count = 0;
+    for (id, t) in sheep {
+        if !in_bounds(t.translation) {
+            if tracked_id.is_none() {
+                *tracked_id = Some(id);
+            }
+            out_of_bounds_count += 1;
+        }
+    }
+
+    if out_of_bounds_count >= 10 {
+        error!(out_of_bounds_count);
+    } else if out_of_bounds_count >= 5 {
+        warn!(out_of_bounds_count);
+    } else if out_of_bounds_count > 0 {
+        info!(out_of_bounds_count);
     }
 }
