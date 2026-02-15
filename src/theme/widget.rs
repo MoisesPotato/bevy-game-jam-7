@@ -82,16 +82,37 @@ where
     B: Bundle,
     I: IntoObserverSystem<E, B, M>,
 {
-    button_base(
+    button_with_bundle(text, action, (), ())
+}
+
+/// `inner_bundle` goes with the clickable entity
+/// `text_bundle` goes with the text entity
+pub fn button_with_bundle<E, B, M, I>(
+    text: impl Into<String>,
+    action: I,
+    inner_bundle: impl Bundle,
+    text_bundle: impl Bundle,
+) -> impl Bundle
+where
+    E: EntityEvent,
+    B: Bundle,
+    I: IntoObserverSystem<E, B, M>,
+{
+    button_base_with_bundle(
         text,
         action,
-        Node {
-            width: px(30),
-            height: px(30),
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
-            ..default()
-        },
+        (
+            inner_bundle,
+            Node {
+                width: px(380),
+                height: px(80),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                border_radius: BorderRadius::MAX,
+                ..default()
+            },
+        ),
+        text_bundle,
     )
 }
 
@@ -100,6 +121,20 @@ fn button_base<E, B, M, I>(
     text: impl Into<String>,
     action: I,
     button_bundle: impl Bundle,
+) -> impl Bundle
+where
+    E: EntityEvent,
+    B: Bundle,
+    I: IntoObserverSystem<E, B, M>,
+{
+    button_base_with_bundle(text, action, button_bundle, ())
+}
+
+fn button_base_with_bundle<E, B, M, I>(
+    text: impl Into<String>,
+    action: I,
+    button_bundle: impl Bundle,
+    text_bundle: impl Bundle,
 ) -> impl Bundle
 where
     E: EntityEvent,
@@ -129,6 +164,7 @@ where
                         TextColor(BUTTON_TEXT),
                         // Don't bubble picking events from the text up to the button.
                         Pickable::IGNORE,
+                        text_bundle
                     )],
                 ))
                 .insert(button_bundle)

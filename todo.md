@@ -6,5 +6,7 @@
 - Getting eaten effect
 - Fix bleat overlapping
 - Sheep survival instinct
-- Respawning sheep  are going offscreen
 - More fluid movement for wolf
+- Rotate wolf halo over time
+- Figure out what to do with setting menu
+- Credits

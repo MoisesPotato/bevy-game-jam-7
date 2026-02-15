@@ -1,5 +1,6 @@
 //! The game's menus and transitions between them.
 
+mod controls;
 mod credits;
 mod main;
 mod pause;
@@ -15,6 +16,7 @@ pub fn plugin(app: &mut App) {
         main::plugin,
         settings::plugin,
         pause::plugin,
+        controls::plugin,
     ));
 }
 
@@ -24,6 +26,7 @@ pub enum Menu {
     None,
     Main,
     Credits,
+    Controls,
     Settings,
     Pause,
 }
