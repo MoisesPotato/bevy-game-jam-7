@@ -6,18 +6,18 @@ use crate::{
     PausableSystems,
     demo::{
         cabbage::{Cabbage, Score},
-        level::{Level, N_SHEEP},
+        level::{BG_COLOR, Level, N_SHEEP},
         player::PlayerAssets,
         sheep::{Sheep, new_sheep},
     },
-    intro::message::MESSAGES,
+    intro::{message::MESSAGES, text_fade::FadeIn},
     screens::Screen,
-    theme::palette::RESURRECT_PALETTE,
 };
 
 use message::Message;
 
 mod message;
+mod text_fade;
 
 pub fn plugin(app: &mut App) {
     app.init_resource::<PlayedIntro>();
@@ -27,7 +27,7 @@ pub fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Screen::Intro), spawn_intro);
     app.add_systems(
         Update,
-        (advance_intro, resume)
+        (advance_intro, resume, text_fade::apply)
             .in_set(PausableSystems)
             .run_if(in_state(Screen::Intro)),
     );
@@ -151,9 +151,10 @@ fn advance_intro(
                 Text((*text).into()),
                 TextFont::from_font_size(48.0),
                 TextLayout::new(Justify::Left, LineBreak::WordBoundary),
-                TextColor(RESURRECT_PALETTE[9]),
+                TextColor(BG_COLOR),
                 IntroText,
                 ChildOf(intro.0),
+                FadeIn::new(),
             ));
 
             if *clears_screen {

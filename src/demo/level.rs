@@ -102,6 +102,7 @@ pub fn spawn_level_function(
     spawn_score(&mut commands, level);
 }
 
+pub const BG_COLOR: Color = RESURRECT_PALETTE[35];
 fn background(mut clear_color: ResMut<ClearColor>) {
-    *clear_color = ClearColor(RESURRECT_PALETTE[35]);
+    *clear_color = ClearColor(BG_COLOR);
 }

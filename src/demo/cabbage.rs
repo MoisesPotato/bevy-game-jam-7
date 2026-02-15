@@ -11,7 +11,7 @@ use crate::{
     demo::{level::Level, movement::HumanMind, sheep::Sheep},
     intro::{CabbageEnabled, IntroPause, Resume},
     screens::Screen,
-    theme::palette::RESURRECT_PALETTE,
+    theme::palette::WHITE,
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -182,7 +182,7 @@ pub fn spawn_score(commands: &mut Commands, level: Entity) {
                 right: px(12),
                 ..Default::default()
             },
-            TextColor(RESURRECT_PALETTE[9]),
+            TextColor(WHITE),
             ChildOf(level),
         ))
         .with_child((TextSpan::new("0"), ScoreUI));

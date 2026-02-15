@@ -15,6 +15,8 @@ pub const BUTTON_HOVERED_BACKGROUND: Color = Color::srgb(0.384, 0.600, 0.820);
 /// #3d4999
 pub const BUTTON_PRESSED_BACKGROUND: Color = Color::srgb(0.239, 0.286, 0.600);
 
+pub const WHITE: Color = RESURRECT_PALETTE[9];
+
 pub const RESURRECT_PALETTE: [Color; 64] = [
     Color::srgb(0.180, 0.133, 0.184),
     Color::srgb(0.243, 0.208, 0.275),
