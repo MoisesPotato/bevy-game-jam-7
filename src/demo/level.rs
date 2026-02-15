@@ -21,7 +21,7 @@ pub(super) fn plugin(app: &mut App) {
 #[reflect(Resource)]
 pub struct LevelAssets {
     #[dependency]
-    music: Handle<AudioSource>,
+    pub music: Handle<AudioSource>,
 }
 
 impl FromWorld for LevelAssets {

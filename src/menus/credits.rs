@@ -2,7 +2,10 @@
 
 use bevy::{ecs::spawn::SpawnIter, input::common_conditions::input_just_pressed, prelude::*};
 
-use crate::{asset_tracking::LoadResource, menus::Menu, theme::prelude::*};
+use crate::{
+    asset_tracking::LoadResource, audio::music, demo::level::LevelAssets, menus::Menu,
+    theme::prelude::*,
+};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Menu::Credits), spawn_credits_menu);
@@ -32,20 +35,16 @@ fn spawn_credits_menu(mut commands: Commands) {
 
 fn created_by() -> impl Bundle {
     grid(vec![
-        ["Joe Shmoe", "Implemented alligator wrestling AI"],
-        ["Jane Doe", "Made the music for the alien invasion"],
+        ["Cosmic Lithium", "Music"],
+        ["MoisesPotato", "Sheep Psychiatrist"],
     ])
 }
 
 fn assets() -> impl Bundle {
     grid(vec![
-        ["Ducky sprite", "CC0 by Caz Creates Games"],
-        ["Button SFX", "CC0 by Jaszunio15"],
-        ["Music", "CC BY 3.0 by Kevin MacLeod"],
-        [
-            "Bevy logo",
-            "All rights reserved by the Bevy Foundation, permission granted for splash screen use when unmodified",
-        ],
+        ["Bleats", "CC BY 4.0 by leonseptavaux"],
+        ["Resurrect 64 color palette", "by Kerrie Lake on lospec.com"],
+        ["Splash image", "CC BY 2.0 by Philip Capper"],
     ])
 }
 
@@ -101,13 +100,10 @@ impl FromWorld for CreditsAssets {
     }
 }
 
-fn start_credits_music(
-    mut commands: Commands,
-    //  credits_music: Res<CreditsAssets>
-) {
+fn start_credits_music(mut commands: Commands, level_assets: Res<LevelAssets>) {
     commands.spawn((
         Name::new("Credits Music"),
         DespawnOnExit(Menu::Credits),
-        // music(credits_music.music.clone()),
+        music(level_assets.music.clone()),
     ));
 }
