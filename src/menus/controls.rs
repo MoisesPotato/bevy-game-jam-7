@@ -3,7 +3,11 @@
 //! Additional settings and accessibility options should go here.
 
 use bevy::{
-    input::{ButtonState, common_conditions::input_just_pressed, keyboard::KeyboardInput},
+    input::{
+        ButtonState,
+        common_conditions::input_just_pressed,
+        keyboard::{self, KeyboardInput},
+    },
     prelude::*,
 };
 
@@ -198,17 +202,15 @@ fn execute_change_key(
                 continue;
             }
             button.changing = false;
-            let code = match button.which {
-                Up => &mut control_scheme.up,
-                Down => &mut control_scheme.down,
-                Left => &mut control_scheme.left,
-                Right => &mut control_scheme.right,
-                Bleat => &mut control_scheme.bleat,
-            };
+            let code = control_scheme.get_mut(button.which);
 
             code.0 = key.key_code;
             code.1 = match &key.logical_key {
-                bevy::input::keyboard::Key::Character(str) => str.to_string(),
+                bevy::input::keyboard::Key::Character(str) => str.to_uppercase(),
+                keyboard::Key::ArrowDown => "Down".into(),
+                keyboard::Key::ArrowUp => "Up".into(),
+                keyboard::Key::ArrowLeft => "Left".into(),
+                keyboard::Key::ArrowRight => "Right".into(),
                 _ => format!("{:?}", key.logical_key),
             }
         }
@@ -239,22 +241,28 @@ impl Default for ControlScheme {
 
 fn update_labels(scheme: Res<ControlScheme>, label: Query<(&mut Text, &KeyLabel)>) {
     for (mut text, label) in label {
-        match label.which {
-            Up => {
-                text.0.clone_from(&scheme.up.1);
-            }
-            Down => {
-                text.0.clone_from(&scheme.down.1);
-            }
-            Left => {
-                text.0.clone_from(&scheme.left.1);
-            }
-            Right => {
-                text.0.clone_from(&scheme.right.1);
-            }
-            Bleat => {
-                text.0.clone_from(&scheme.bleat.1);
-            }
+        text.0.clone_from(&scheme.get(label.which).1);
+    }
+}
+
+impl ControlScheme {
+    const fn get(&self, key: KeyAction) -> &(KeyCode, String) {
+        match key {
+            Up => &self.up,
+            Down => &self.down,
+            Left => &self.left,
+            Right => &self.right,
+            Bleat => &self.bleat,
+        }
+    }
+
+    const fn get_mut(&mut self, key: KeyAction) -> &mut (KeyCode, String) {
+        match key {
+            Up => &mut self.up,
+            Down => &mut self.down,
+            Left => &mut self.left,
+            Right => &mut self.right,
+            Bleat => &mut self.bleat,
         }
     }
 }
