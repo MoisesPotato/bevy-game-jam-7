@@ -1,4 +1,3 @@
-- Effect for ego switch
 - Effect for when the player ate a cabbage
 - Boost button
 - Show that wolf is sleeping
@@ -6,7 +5,6 @@
 - Multiplayer
 - Getting eaten effect
 - Fix bleat overlapping
-- Reset score on restart
 - Sheep survival instinct
-- Respawn sheep
+- Respawning sheep  are going offscreen
 - More fluid movement for wolf

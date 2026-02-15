@@ -9,6 +9,7 @@ use crate::{
     asset_tracking::LoadResource,
     camera::{GAME_HEIGHT, GAME_WIDTH},
     demo::{level::Level, movement::HumanMind, sheep::Sheep},
+    screens::Screen,
     theme::palette::RESURRECT_PALETTE,
 };
 
@@ -27,6 +28,8 @@ pub(super) fn plugin(app: &mut App) {
             .in_set(AppSystems::Update)
             .in_set(PausableSystems),
     );
+
+    app.add_systems(OnEnter(Screen::Gameplay), reset_score);
 
     app.insert_resource(Score(0));
 }
@@ -180,4 +183,8 @@ fn update_score(score: Res<Score>, ui: Query<&mut TextSpan, With<ScoreUI>>) {
     for mut text in ui {
         *text = TextSpan::new((score.0).to_string());
     }
+}
+
+fn reset_score(mut score: ResMut<Score>) {
+    score.0 = 0;
 }
