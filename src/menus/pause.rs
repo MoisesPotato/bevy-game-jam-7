@@ -20,14 +20,9 @@ fn spawn_pause_menu(mut commands: Commands) {
         children![
             widget::header("Game paused"),
             widget::button("Continue", close_menu),
-            widget::button("Settings", open_settings_menu),
             widget::button("Quit to title", quit_to_title),
         ],
     ));
-}
-
-fn open_settings_menu(_: On<Pointer<Click>>, mut next_menu: ResMut<NextState<Menu>>) {
-    next_menu.set(Menu::Settings);
 }
 
 fn close_menu(_: On<Pointer<Click>>, mut next_menu: ResMut<NextState<Menu>>) {

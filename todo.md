@@ -7,7 +7,6 @@
 - Sheep survival instinct
 - More fluid movement for wolf
 - Rotate wolf halo over time
-- Figure out what to do with setting menu
 - Credits
 - Make player collision different
 - Make game progressively harder

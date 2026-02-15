@@ -11,13 +11,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{
-    menus::{
-        Menu,
-        settings::{go_back, go_back_on_click},
-    },
-    theme::prelude::*,
-};
+use crate::{menus::Menu, screens::Screen, theme::prelude::*};
 
 use PlayerAction::{Bleat, Down, Left, Right, Up};
 
@@ -271,4 +265,24 @@ impl ControlScheme {
             .into_iter()
             .filter(move |k| self.get(*k).0 == code)
     }
+}
+
+pub fn go_back_on_click(
+    _: On<Pointer<Click>>,
+    screen: Res<State<Screen>>,
+    mut next_menu: ResMut<NextState<Menu>>,
+) {
+    next_menu.set(if screen.get() == &Screen::Title {
+        Menu::Main
+    } else {
+        Menu::Pause
+    });
+}
+
+pub fn go_back(screen: Res<State<Screen>>, mut next_menu: ResMut<NextState<Menu>>) {
+    next_menu.set(if screen.get() == &Screen::Title {
+        Menu::Main
+    } else {
+        Menu::Pause
+    });
 }

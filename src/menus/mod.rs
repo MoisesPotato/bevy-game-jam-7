@@ -4,7 +4,6 @@ mod controls;
 mod credits;
 mod main;
 mod pause;
-mod settings;
 
 pub use controls::{ControlScheme, PlayerAction};
 pub use main::start_already;
@@ -17,7 +16,6 @@ pub fn plugin(app: &mut App) {
     app.add_plugins((
         credits::plugin,
         main::plugin,
-        settings::plugin,
         pause::plugin,
         controls::plugin,
     ));
@@ -30,6 +28,5 @@ pub enum Menu {
     Main,
     Credits,
     Controls,
-    Settings,
     Pause,
 }
