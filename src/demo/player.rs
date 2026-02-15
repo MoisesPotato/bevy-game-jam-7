@@ -9,6 +9,7 @@ use rand::{Rng, rng};
 use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
+    controls::PlayerInput,
     demo::{
         movement::HumanMind,
         sheep::{Sheep, ego::ConfusionSpawner},
@@ -59,21 +60,21 @@ pub fn choose(
 }
 
 fn record_player_directional_input(
-    input: Res<ButtonInput<KeyCode>>,
+    input: Res<PlayerInput>,
     mut controller_query: Query<&mut HumanMind>,
 ) {
     // Collect directional input.
     let mut intent = Vec2::ZERO;
-    if input.pressed(KeyCode::KeyW) || input.pressed(KeyCode::ArrowUp) {
+    if input.up {
         intent.y += 1.0;
     }
-    if input.pressed(KeyCode::KeyS) || input.pressed(KeyCode::ArrowDown) {
+    if input.down {
         intent.y -= 1.0;
     }
-    if input.pressed(KeyCode::KeyA) || input.pressed(KeyCode::ArrowLeft) {
+    if input.left {
         intent.x -= 1.0;
     }
-    if input.pressed(KeyCode::KeyD) || input.pressed(KeyCode::ArrowRight) {
+    if input.right {
         intent.x += 1.0;
     }
 

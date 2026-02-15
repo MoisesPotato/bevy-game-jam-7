@@ -5,21 +5,21 @@ use std::{
     time::Duration,
 };
 
-use bevy::{
-    input::common_conditions::input_just_pressed, prelude::*, time::common_conditions::on_timer,
-};
+use bevy::{prelude::*, time::common_conditions::on_timer};
 use rand::{Rng, rng};
 
 use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
     camera::{GAME_HEIGHT, GAME_WIDTH},
+    controls::just_pressed,
     demo::{
         animation::SheepAnimation,
         level::{Level, N_SHEEP},
         movement::{HumanMind, ScreenWrap},
         player::PlayerAssets,
     },
+    menus::PlayerAction,
     screens::Screen,
 };
 
@@ -41,7 +41,7 @@ pub fn plugin(app: &mut App) {
     app.add_systems(
         Update,
         bleat::with_b
-            .run_if(input_just_pressed(KeyCode::KeyB))
+            .run_if(just_pressed(PlayerAction::Bleat))
             .in_set(AppSystems::Update)
             .in_set(PausableSystems)
             .run_if(in_state(Screen::Gameplay)),

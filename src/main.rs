@@ -16,6 +16,7 @@
 mod asset_tracking;
 mod audio;
 mod camera;
+mod controls;
 mod demo;
 #[cfg(feature = "dev")]
 mod dev_tools;
@@ -68,6 +69,7 @@ impl Plugin for AppPlugin {
             theme::plugin,
             camera::plugin,
             game_over::plugin,
+            controls::plugin,
         ));
 
         // Order new `AppSystems` variants by adding them here:

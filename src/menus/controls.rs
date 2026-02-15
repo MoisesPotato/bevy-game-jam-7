@@ -19,7 +19,7 @@ use crate::{
     theme::prelude::*,
 };
 
-use KeyAction::{Bleat, Down, Left, Right, Up};
+use PlayerAction::{Bleat, Down, Left, Right, Up};
 
 pub(super) fn plugin(app: &mut App) {
     app.init_resource::<ControlScheme>();
@@ -81,7 +81,7 @@ fn grid() -> impl Bundle {
 }
 
 #[derive(Clone, Copy, Reflect, Debug, PartialEq, Eq)]
-enum KeyAction {
+pub enum PlayerAction {
     Up,
     Down,
     Left,
@@ -89,7 +89,7 @@ enum KeyAction {
     Bleat,
 }
 
-impl KeyAction {
+impl PlayerAction {
     const fn str(self) -> &'static str {
         match self {
             Up => "Up",
@@ -146,13 +146,13 @@ impl KeyAction {
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 struct KeyLabel {
-    which: KeyAction,
+    which: PlayerAction,
 }
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 struct KeyChange {
-    which: KeyAction,
+    which: PlayerAction,
     changing: bool,
 }
 
@@ -219,7 +219,7 @@ fn execute_change_key(
 
 #[derive(Resource, Reflect, Debug)]
 #[reflect(Resource)]
-struct ControlScheme {
+pub struct ControlScheme {
     up: (KeyCode, String),
     down: (KeyCode, String),
     left: (KeyCode, String),
@@ -246,7 +246,7 @@ fn update_labels(scheme: Res<ControlScheme>, label: Query<(&mut Text, &KeyLabel)
 }
 
 impl ControlScheme {
-    const fn get(&self, key: KeyAction) -> &(KeyCode, String) {
+    const fn get(&self, key: PlayerAction) -> &(KeyCode, String) {
         match key {
             Up => &self.up,
             Down => &self.down,
@@ -256,7 +256,7 @@ impl ControlScheme {
         }
     }
 
-    const fn get_mut(&mut self, key: KeyAction) -> &mut (KeyCode, String) {
+    const fn get_mut(&mut self, key: PlayerAction) -> &mut (KeyCode, String) {
         match key {
             Up => &mut self.up,
             Down => &mut self.down,
@@ -264,5 +264,11 @@ impl ControlScheme {
             Right => &mut self.right,
             Bleat => &mut self.bleat,
         }
+    }
+
+    pub fn by_keycode(&self, code: KeyCode) -> impl Iterator<Item = PlayerAction> {
+        [Up, Down, Left, Right, Bleat]
+            .into_iter()
+            .filter(move |k| self.get(*k).0 == code)
     }
 }

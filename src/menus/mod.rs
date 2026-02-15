@@ -6,6 +6,8 @@ mod main;
 mod pause;
 mod settings;
 
+pub use controls::{ControlScheme, PlayerAction};
+
 use bevy::prelude::*;
 
 pub fn plugin(app: &mut App) {
