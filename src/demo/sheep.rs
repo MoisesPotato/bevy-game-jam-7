@@ -16,7 +16,7 @@ use crate::{
     camera::{GAME_HEIGHT, GAME_WIDTH},
     demo::{
         animation::SheepAnimation,
-        level::N_SHEEP,
+        level::{Level, N_SHEEP},
         movement::{HumanMind, ScreenWrap},
         player::PlayerAssets,
     },
@@ -69,7 +69,9 @@ pub fn plugin(app: &mut App) {
                 // Hopefully it doesn't align with other lol
                 1.62,
             )))
-            .in_set(AppSystems::Update),
+            .in_set(AppSystems::Update)
+            .in_set(PausableSystems)
+            .run_if(in_state(Screen::Gameplay)),
     );
 
     app.add_plugins(ego::plugin);
@@ -317,6 +319,7 @@ impl FromWorld for SheepAssets {
 
 fn respawn_dead(
     mut commands: Commands,
+    level: Query<Entity, With<Level>>,
     query: Query<(), With<Sheep>>,
     player_assets: Res<PlayerAssets>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
@@ -327,7 +330,16 @@ fn respawn_dead(
         return;
     }
 
-    commands.spawn(sheep_at_edge(&player_assets, &mut texture_atlas_layouts));
+    let Some(level) = level.iter().next() else {
+        error!("No level");
+        return;
+    };
+
+    commands.spawn(sheep_at_edge(
+        &player_assets,
+        &mut texture_atlas_layouts,
+        level,
+    ));
 }
 
 #[derive(Component, Reflect, Debug)]
@@ -341,6 +353,7 @@ const DIST_FROM_EDGE: f32 = 20.;
 fn sheep_at_edge(
     player_assets: &PlayerAssets,
     texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
+    level: Entity,
 ) -> impl Bundle {
     let total_edge_len: f32 = 2. * (GAME_WIDTH + GAME_HEIGHT);
     let spawn_point: f32 = total_edge_len * rng().random::<f32>();
@@ -384,6 +397,7 @@ fn sheep_at_edge(
         },
         SheepAtEdge { speed },
         sheep_base(player_assets, texture_atlas_layouts),
+        ChildOf(level),
     )
 }
 
