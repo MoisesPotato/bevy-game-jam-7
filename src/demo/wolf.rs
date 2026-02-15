@@ -86,7 +86,10 @@ pub struct WolfSpawnStatus(Timer);
 // const SECONDS_TO_SPAWN: f32 = 0.2;
 // #[cfg(not(feature = "dev"))]
 const SECONDS_TO_SPAWN: f32 = 5.;
-const MAX_NUMBER: usize = 1;
+
+fn max_wolves(elapsed_secs: f32) -> usize {
+    1 + f32::sqrt(elapsed_secs / 10.) as usize
+}
 
 impl Default for WolfSpawnStatus {
     fn default() -> Self {
@@ -101,7 +104,9 @@ fn spawn(
     level: Query<Entity, With<Level>>,
     wolves: Query<(), With<Wolf>>,
     assets: If<Res<WolfAssets>>,
+    mut elapsed: Local<f32>,
 ) {
+    *elapsed += time.delta_secs();
     let Some(level) = level.iter().next() else {
         return;
     };
@@ -114,7 +119,7 @@ fn spawn(
 
     let count_wolves = wolves.count();
 
-    if count_wolves >= MAX_NUMBER {
+    if count_wolves >= max_wolves(*elapsed) {
         return;
     }
 
@@ -144,7 +149,13 @@ fn spawn(
 }
 
 const THINK_INTERVAL_HUNGRY: f32 = 0.5;
-const THINK_INTERVAL_FULL: f32 = 1.0;
+const SLEEP_TIME_INITIAL: f32 = 1.0;
+const SLEEP_HALF_TIME: f32 = 60.0;
+
+fn sleep_time(elapsed_secs: f32) -> f32 {
+    SLEEP_TIME_INITIAL / (1. + elapsed_secs / SLEEP_HALF_TIME)
+}
+
 const EAT_RANGE: f32 = 16.;
 
 fn think_eat(
@@ -153,7 +164,9 @@ fn think_eat(
     wolf: Query<(&Transform, &mut Wolf)>,
     sheep: Query<(Entity, &Transform, Option<&HumanMind>), With<Sheep>>,
     mut next_screen: ResMut<NextState<Screen>>,
+    mut elapsed: Local<f32>,
 ) {
+    *elapsed += time.delta_secs();
     for (transf, mut wolf) in wolf {
         wolf.time_left.tick(time.delta());
 
@@ -175,7 +188,7 @@ fn think_eat(
             commands.entity(id).despawn();
             wolf.prey = None;
             wolf.time_left
-                .set_duration(Duration::from_secs_f32(THINK_INTERVAL_FULL));
+                .set_duration(Duration::from_secs_f32(sleep_time(*elapsed)));
             wolf.time_left.reset();
             if human {
                 next_screen.set(Screen::GameOver);
@@ -189,13 +202,23 @@ fn think_eat(
     }
 }
 
-const SPEED: f32 = 100.;
+const MAX_SPEED: f32 = 100.;
+const INITIAL_SPEED: f32 = 100.;
+const HALFTIME_POINT: f32 = 60.;
+
+fn speed(elapsed_secs: f32) -> f32 {
+    (MAX_SPEED - INITIAL_SPEED / (1. + elapsed_secs / HALFTIME_POINT))
+        .clamp(INITIAL_SPEED, MAX_SPEED)
+}
 
 fn hunt(
     time: Res<Time>,
     wolf: Query<(&mut Transform, &mut Wolf)>,
     sheep: Query<&Transform, Without<Wolf>>,
+    mut elapsed: Local<f32>,
 ) {
+    *elapsed += time.delta_secs();
+
     for (mut transform, mut think) in wolf {
         let Some(prey) = think.prey else {
             continue;
@@ -206,6 +229,6 @@ fn hunt(
         };
         let target = (prey.translation - transform.translation).normalize_or_zero();
 
-        transform.translation += target * SPEED * time.delta_secs();
+        transform.translation += target * speed(*elapsed) * time.delta_secs();
     }
 }
