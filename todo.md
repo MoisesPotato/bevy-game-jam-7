@@ -9,3 +9,4 @@
 - Reset score on restart
 - Sheep survival instinct
 - Respawn sheep
+- More fluid movement for wolf

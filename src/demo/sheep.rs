@@ -49,7 +49,13 @@ pub fn plugin(app: &mut App) {
 
     app.add_systems(
         Update,
-        (bleat::tick, bleat::spread, bleat::random, ego::jump)
+        (
+            bleat::tick,
+            bleat::spread,
+            bleat::random,
+            ego::jump,
+            move_from_edge,
+        )
             .in_set(AppSystems::Update)
             .in_set(PausableSystems)
             .run_if(in_state(Screen::Gameplay)),
@@ -326,7 +332,9 @@ fn respawn_dead(
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
-struct SheepAtEdge;
+struct SheepAtEdge {
+    speed: Vec2,
+}
 
 const DIST_FROM_EDGE: f32 = 20.;
 
@@ -374,10 +382,8 @@ fn sheep_at_edge(
             translation: pos.extend(0.),
             ..Default::default()
         },
-        SheepAtEdge,
+        SheepAtEdge { speed },
         sheep_base(player_assets, texture_atlas_layouts),
-        // Remove this
-        ScreenWrap,
     )
 }
 
@@ -411,4 +417,27 @@ fn sheep_base(
         ),
         player_animation,
     )
+}
+
+const ENTER_SPEED: f32 = 100.;
+
+fn move_from_edge(
+    mut commands: Commands,
+    time: Res<Time>,
+    sheep: Query<(Entity, &mut Transform, &SheepAtEdge)>,
+) {
+    for (id, mut transf, edge) in sheep {
+        transf.translation += ENTER_SPEED * time.delta_secs() * edge.speed.extend(0.);
+
+        if -GAME_WIDTH / 2. <= transf.translation.x
+            && transf.translation.x <= GAME_WIDTH / 2.
+            && -GAME_HEIGHT / 2. <= transf.translation.y
+            && transf.translation.y <= GAME_HEIGHT / 2.
+        {
+            commands
+                .entity(id)
+                .remove::<SheepAtEdge>()
+                .insert((SheepMind::new_idle(), ScreenWrap));
+        }
+    }
 }
