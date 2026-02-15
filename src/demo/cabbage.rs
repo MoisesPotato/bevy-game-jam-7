@@ -63,9 +63,9 @@ pub struct Cabbage;
 
 pub struct CabbageTimer(Timer);
 
-const SECONDS_TO_CABBAGE: f32 = 3.;
+const SECONDS_TO_CABBAGE: f32 = 1.;
 const SPAWN_CHANCE: f32 = 0.8;
-const MAX_NUMBER: usize = 5;
+const MAX_NUMBER: usize = 8;
 
 impl Default for CabbageTimer {
     fn default() -> Self {
