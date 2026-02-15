@@ -11,7 +11,9 @@ use crate::{
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Screen::Gameplay), spawn_level);
+    app.add_systems(OnEnter(Screen::Intro), spawn_level);
     app.add_systems(OnEnter(Screen::Gameplay), player::choose.after(spawn_level));
+    app.add_systems(OnEnter(Screen::Intro), player::choose.after(spawn_level));
 
     // Toggle pause on key press.
     app.add_systems(

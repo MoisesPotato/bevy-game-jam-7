@@ -31,48 +31,32 @@ pub fn plugin(app: &mut App) {
 
     app.add_systems(
         Update,
-        (collision, think, walk)
-            .chain()
-            .in_set(AppSystems::Update)
-            .in_set(PausableSystems)
-            .run_if(in_state(Screen::Gameplay)),
-    );
-
-    app.add_systems(
-        Update,
-        bleat::with_b
-            .run_if(just_pressed(PlayerAction::Bleat))
-            .in_set(AppSystems::Update)
-            .in_set(PausableSystems)
-            .run_if(in_state(Screen::Gameplay)),
-    );
-
-    app.add_systems(
-        Update,
         (
+            (collision, think, walk).chain(),
             bleat::tick,
             bleat::spread,
             bleat::random,
+            bleat::despawn_image,
+            bleat::with_b.run_if(just_pressed(PlayerAction::Bleat)),
             ego::jump,
             move_from_edge,
+            respawn_dead.run_if(on_timer(Duration::from_secs_f32(
+                // Hopefully it doesn't align with other lol
+                1.62,
+            ))),
         )
             .in_set(AppSystems::Update)
             .in_set(PausableSystems)
             .run_if(in_state(Screen::Gameplay)),
     );
 
-    app.add_systems(Update, bleat::despawn_image.in_set(AppSystems::Update));
     app.add_systems(
         Update,
-        respawn_dead
-            .run_if(on_timer(Duration::from_secs_f32(
-                // Hopefully it doesn't align with other lol
-                1.62,
-            )))
+        ((collision, think, walk).chain(), ego::jump)
             .in_set(AppSystems::Update)
-            .in_set(PausableSystems)
-            .run_if(in_state(Screen::Gameplay)),
+            .run_if(in_state(Screen::Intro)),
     );
+
     // app.add_systems(
     //     Update,
     //     log_offscreen
@@ -182,11 +166,18 @@ impl SheepMind {
 pub fn new_sheep(
     player_assets: &PlayerAssets,
     texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
+    state: Screen,
 ) -> impl Bundle {
     let mut rng = rng();
+
     let angle = 2. * PI * rng.random::<f32>();
-    let distance = GAME_HEIGHT / 4. * (1. - rng.random::<f32>().powi(2));
-    let pos = distance * Vec2::from_angle(angle);
+    let pos = if matches!(state, Screen::Intro) {
+        let distance = GAME_HEIGHT / 8. * (1. - rng.random::<f32>().powi(2));
+        distance * Vec2::from_angle(angle) + Vec2::new(GAME_WIDTH / 4., 0.)
+    } else {
+        let distance = GAME_HEIGHT / 4. * (1. - rng.random::<f32>().powi(2));
+        distance * Vec2::from_angle(angle)
+    };
 
     (
         sheep_base(player_assets, texture_atlas_layouts),

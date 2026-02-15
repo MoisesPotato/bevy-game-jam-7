@@ -30,7 +30,7 @@ pub const MESSAGES: &[Message] = &[
     Message::new("This is clear to us, as sheep", 3.),
     Message::new_clear("Press Space to express your individuality", 3.),
     Message::new("Press WASD to move around", 3.),
-    Message::new("Try not to express your individuality this way", 2.),
+    Message::new("Do not express your individuality by pressing WASD", 2.),
     Message::new("We also express our individuality", 1.),
     Message::new_clear("We also like cabbage, it is our food", 3.),
     Message::new("We are not food", 2.),

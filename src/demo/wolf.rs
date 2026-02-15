@@ -23,14 +23,10 @@ pub fn plugin(app: &mut App) {
     app.load_resource::<WolfAssets>();
     app.add_systems(
         Update,
-        spawn.in_set(AppSystems::Update).in_set(PausableSystems),
-    );
-    app.add_systems(
-        Update,
-        (think_eat, hunt)
-            .chain()
+        (spawn, (think_eat, hunt).chain())
             .in_set(AppSystems::Update)
-            .in_set(PausableSystems),
+            .in_set(PausableSystems)
+            .run_if(in_state(Screen::Gameplay)),
     );
 }
 

@@ -17,14 +17,8 @@ pub(super) fn plugin(app: &mut App) {
     app.load_resource::<CabbageAssets>();
     app.add_systems(
         Update,
-        (spawn, eat)
-            .in_set(AppSystems::Update)
-            .in_set(PausableSystems),
-    );
-    app.add_systems(
-        Update,
-        update_score
-            .run_if(resource_changed::<Score>)
+        (spawn, eat, update_score.run_if(resource_changed::<Score>))
+            .run_if(in_state(Screen::Gameplay))
             .in_set(AppSystems::Update)
             .in_set(PausableSystems),
     );
