@@ -2,22 +2,22 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
-use crate::{screens::Screen, theme::palette::RESURRECT_PALETTE};
+use crate::{
+    PausableSystems, intro::message::MESSAGES, screens::Screen, theme::palette::RESURRECT_PALETTE,
+};
+
+mod message;
 
 pub fn plugin(app: &mut App) {
-    app.init_state::<InIntro>();
     app.init_resource::<PlayedIntro>();
 
-    app.add_systems(OnEnter(Screen::Gameplay), spawn_intro);
-    app.add_systems(Update, advance_intro);
+    app.add_systems(OnEnter(Screen::Intro), spawn_intro);
+    app.add_systems(Update, advance_intro.in_set(PausableSystems));
 }
-
-#[derive(States, Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
-pub struct InIntro(bool);
 
 #[derive(Resource, Reflect, Debug, Default)]
 #[reflect(Resource)]
-struct PlayedIntro(bool);
+pub struct PlayedIntro(pub bool);
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
@@ -29,28 +29,29 @@ struct Intro {
 fn spawn_intro(
     mut commands: Commands,
     mut played: ResMut<PlayedIntro>,
-    mut next_state: ResMut<NextState<InIntro>>,
+    mut next_state: ResMut<NextState<Screen>>,
 ) {
     if played.0 {
+        next_state.set(Screen::Gameplay);
         return;
     }
     played.0 = true;
-    next_state.set(InIntro(true));
     commands.spawn((
         Name::new("Tutorial text"),
         Node {
             position_type: PositionType::Absolute,
-            width: percent(100),
-            left: px(30),
+            width: percent(50),
+            left: px(10),
             height: percent(100),
+            top: px(10),
             display: Display::Flex,
             row_gap: px(10),
             column_gap: px(30),
             flex_direction: FlexDirection::Column,
-            top: px(10),
+            padding: px(0).into(),
             ..default()
         },
-        DespawnOnExit(InIntro(true)),
+        DespawnOnExit(Screen::Intro),
         Intro {
             time_to_next_message: Timer::new(Duration::ZERO, TimerMode::Once),
             displayed_messages: 0,
@@ -58,9 +59,12 @@ fn spawn_intro(
     ));
 }
 
-const MESSAGES: &[&str] = &["Test test", "Second message", "Third Message"];
-
-fn advance_intro(mut commands: Commands, time: Res<Time>, mut intro: Single<(Entity, &mut Intro)>) {
+fn advance_intro(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut intro: Single<(Entity, &mut Intro)>,
+    old_messages: Query<Entity, With<IntroText>>,
+) {
     intro.1.time_to_next_message.tick(time.delta());
 
     if !intro.1.time_to_next_message.just_finished() {
@@ -73,17 +77,35 @@ fn advance_intro(mut commands: Commands, time: Res<Time>, mut intro: Single<(Ent
         .set_duration(Duration::from_secs_f32(1.));
     intro.1.time_to_next_message.reset();
 
-    let Some(text) = MESSAGES.get(intro.1.displayed_messages) else {
+    let Some(message) = MESSAGES.get(intro.1.displayed_messages) else {
         error!("TODO Done!!");
         return;
     };
+
+    intro
+        .1
+        .time_to_next_message
+        .set_duration(Duration::from_secs_f32(message.delay));
+    intro.1.time_to_next_message.reset();
     intro.1.displayed_messages += 1;
 
     commands.spawn((
         Name::new("Intro Text"),
-        Text((*text).into()),
-        TextFont::from_font_size(24.0),
+        Text((message.text).into()),
+        TextFont::from_font_size(48.0),
+        TextLayout::new(Justify::Left, LineBreak::WordBoundary),
         TextColor(RESURRECT_PALETTE[9]),
+        IntroText,
         ChildOf(intro.0),
     ));
+
+    if message.clears_screen {
+        for id in old_messages {
+            commands.entity(id).despawn();
+        }
+    }
 }
+
+#[derive(Component, Reflect, Debug)]
+#[reflect(Component)]
+struct IntroText;

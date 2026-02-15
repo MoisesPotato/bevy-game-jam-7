@@ -13,6 +13,7 @@ pub(super) fn plugin(app: &mut App) {
     app.load_resource::<LevelAssets>();
 
     app.add_systems(OnEnter(Screen::Gameplay), background);
+    app.add_systems(OnEnter(Screen::Intro), background);
 }
 
 #[derive(Resource, Asset, Clone, Reflect)]

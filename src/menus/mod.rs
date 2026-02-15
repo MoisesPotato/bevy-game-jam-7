@@ -7,6 +7,7 @@ mod pause;
 mod settings;
 
 pub use controls::{ControlScheme, PlayerAction};
+pub use main::start_already;
 
 use bevy::prelude::*;
 

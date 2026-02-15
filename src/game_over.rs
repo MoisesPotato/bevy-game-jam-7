@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::{demo::cabbage::Score, screens::Screen, theme::widget};
+use crate::{
+    asset_tracking::ResourceHandles, demo::cabbage::Score, intro::PlayedIntro,
+    menus::start_already, screens::Screen, theme::widget,
+};
 
 pub fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Screen::GameOver), spawn);
@@ -24,6 +27,11 @@ fn to_menu(_: On<Pointer<Click>>, mut next_screen: ResMut<NextState<Screen>>) {
     next_screen.set(Screen::Title);
 }
 
-fn restart(_: On<Pointer<Click>>, mut next_screen: ResMut<NextState<Screen>>) {
-    next_screen.set(Screen::Gameplay);
+fn restart(
+    _: On<Pointer<Click>>,
+    resource_handles: Res<ResourceHandles>,
+    next_screen: ResMut<NextState<Screen>>,
+    played_intro: Res<PlayedIntro>,
+) {
+    start_already(resource_handles, next_screen, played_intro);
 }
