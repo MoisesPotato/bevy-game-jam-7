@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::{
     asset_tracking::LoadResource,
-    demo::{cabbage::spawn_score, player::PlayerAssets, sheep::sheep},
+    demo::{cabbage::spawn_score, player::PlayerAssets, sheep::new_sheep},
     screens::Screen,
     theme::palette::RESURRECT_PALETTE,
 };
@@ -31,7 +31,7 @@ impl FromWorld for LevelAssets {
     }
 }
 
-const N_SHEEP: u8 = 50;
+pub const N_SHEEP: usize = 50;
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
@@ -69,7 +69,7 @@ pub fn spawn_level(
 
     for _ in 0..N_SHEEP {
         commands.spawn((
-            sheep(&player_assets, &mut texture_atlas_layouts),
+            new_sheep(&player_assets, &mut texture_atlas_layouts),
             ChildOf(level),
         ));
     }

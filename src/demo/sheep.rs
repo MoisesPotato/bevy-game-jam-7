@@ -5,15 +5,18 @@ use std::{
     time::Duration,
 };
 
-use bevy::{input::common_conditions::input_just_pressed, prelude::*};
+use bevy::{
+    input::common_conditions::input_just_pressed, prelude::*, time::common_conditions::on_timer,
+};
 use rand::{Rng, rng};
 
 use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
-    camera::GAME_HEIGHT,
+    camera::{GAME_HEIGHT, GAME_WIDTH},
     demo::{
         animation::SheepAnimation,
+        level::N_SHEEP,
         movement::{HumanMind, ScreenWrap},
         player::PlayerAssets,
     },
@@ -53,6 +56,15 @@ pub fn plugin(app: &mut App) {
     );
 
     app.add_systems(Update, bleat::despawn_image.in_set(AppSystems::Update));
+    app.add_systems(
+        Update,
+        respawn_dead
+            .run_if(on_timer(Duration::from_secs_f32(
+                // Hopefully it doesn't align with other lol
+                1.62,
+            )))
+            .in_set(AppSystems::Update),
+    );
 
     app.add_plugins(ego::plugin);
 }
@@ -150,48 +162,25 @@ impl SheepMind {
     }
 }
 
-pub fn sheep(
+/// No transform, no screenwrap
+pub fn new_sheep(
     player_assets: &PlayerAssets,
     texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
 ) -> impl Bundle {
-    // A texture atlas is a way to split a single image into a grid of related images.
-    // You can learn more in this example: https://github.com/bevyengine/bevy/blob/latest/examples/2d/texture_atlas.rs
-    let layout = TextureAtlasLayout::from_grid(UVec2::splat(16), 7, 1, None, None);
-    let texture_atlas_layout = texture_atlas_layouts.add(layout);
-    let player_animation = SheepAnimation::new();
-
     let mut rng = rng();
     let angle = 2. * PI * rng.random::<f32>();
     let distance = GAME_HEIGHT / 4. * (1. - rng.random::<f32>().powi(2));
     let pos = distance * Vec2::from_angle(angle);
 
     (
-        Name::new("Sheep"),
-        Sheep,
+        sheep_base(player_assets, texture_atlas_layouts),
         SheepMind::new_idle(),
-        bleat::RecentBleat {
-            time_to_bleat: Timer::from_seconds(0., TimerMode::Once),
-            time_to_spread: {
-                let mut timer = Timer::from_seconds(bleat::TIME_TO_SPREAD_SECS, TimerMode::Once);
-                timer.finish();
-                timer.tick(Duration::new(1, 0));
-                timer
-            },
-        },
-        Sprite::from_atlas_image(
-            player_assets.sheep.clone(),
-            TextureAtlas {
-                layout: texture_atlas_layout,
-                index: player_animation.get_atlas_index(),
-            },
-        ),
         Transform {
             translation: pos.extend(0.),
             rotation: Quat::IDENTITY,
-            scale: Vec2::splat(1.).extend(1.),
+            scale: Vec3::splat(1.),
         },
         ScreenWrap,
-        player_animation,
     )
 }
 
@@ -318,4 +307,108 @@ impl FromWorld for SheepAssets {
             sound: assets.load("images/sound.png"),
         }
     }
+}
+
+fn respawn_dead(
+    mut commands: Commands,
+    query: Query<(), With<Sheep>>,
+    player_assets: Res<PlayerAssets>,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+) {
+    let count = query.count();
+
+    if count >= N_SHEEP {
+        return;
+    }
+
+    commands.spawn(sheep_at_edge(&player_assets, &mut texture_atlas_layouts));
+}
+
+#[derive(Component, Reflect, Debug)]
+#[reflect(Component)]
+struct SheepAtEdge;
+
+const DIST_FROM_EDGE: f32 = 20.;
+
+fn sheep_at_edge(
+    player_assets: &PlayerAssets,
+    texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
+) -> impl Bundle {
+    let total_edge_len: f32 = 2. * (GAME_WIDTH + GAME_HEIGHT);
+    let spawn_point: f32 = total_edge_len * rng().random::<f32>();
+
+    let (pos, speed) = if spawn_point < GAME_WIDTH {
+        // Top
+        (
+            Vec2::new(spawn_point, GAME_HEIGHT / 2. + DIST_FROM_EDGE),
+            Vec2::new(0., -1.),
+        )
+    } else if spawn_point < GAME_WIDTH + GAME_HEIGHT {
+        // Right
+        (
+            Vec2::new(GAME_WIDTH / 2. + DIST_FROM_EDGE, spawn_point - GAME_WIDTH),
+            Vec2::new(-1., 0.),
+        )
+    } else if spawn_point < 2. * GAME_WIDTH + GAME_HEIGHT {
+        // Bottom
+        (
+            Vec2::new(
+                spawn_point - GAME_HEIGHT - GAME_WIDTH,
+                -GAME_HEIGHT / 2. - DIST_FROM_EDGE,
+            ),
+            Vec2::new(0., 1.),
+        )
+    } else {
+        // Left
+        (
+            Vec2::new(
+                -GAME_WIDTH / 2. - DIST_FROM_EDGE,
+                spawn_point - 2. * GAME_WIDTH - GAME_HEIGHT,
+            ),
+            Vec2::new(1., 0.),
+        )
+    };
+
+    (
+        Transform {
+            translation: pos.extend(0.),
+            ..Default::default()
+        },
+        SheepAtEdge,
+        sheep_base(player_assets, texture_atlas_layouts),
+        // Remove this
+        ScreenWrap,
+    )
+}
+
+/// No transform, no mind, no screenwrap
+fn sheep_base(
+    player_assets: &PlayerAssets,
+    texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
+) -> impl Bundle {
+    let layout = TextureAtlasLayout::from_grid(UVec2::splat(16), 7, 1, None, None);
+    let texture_atlas_layout = texture_atlas_layouts.add(layout);
+    let player_animation = SheepAnimation::new();
+
+    (
+        Name::new("Sheep"),
+        Sheep,
+        bleat::RecentBleat {
+            time_to_bleat: Timer::from_seconds(0., TimerMode::Once),
+            time_to_spread: {
+                let mut timer = Timer::from_seconds(bleat::TIME_TO_SPREAD_SECS, TimerMode::Once);
+                timer.finish();
+                timer.tick(Duration::new(1, 0));
+                timer
+            },
+        },
+        Sprite::from_atlas_image(
+            player_assets.sheep.clone(),
+            TextureAtlas {
+                layout: texture_atlas_layout,
+                index: player_animation.get_atlas_index(),
+            },
+        ),
+        player_animation,
+    )
 }
