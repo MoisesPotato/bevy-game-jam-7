@@ -79,9 +79,9 @@ impl Default for Wolf {
 
 pub struct WolfSpawnStatus(Timer);
 
-#[cfg(feature = "dev")]
-const SECONDS_TO_SPAWN: f32 = 0.2;
-#[cfg(not(feature = "dev"))]
+// #[cfg(feature = "dev")]
+// const SECONDS_TO_SPAWN: f32 = 0.2;
+// #[cfg(not(feature = "dev"))]
 const SECONDS_TO_SPAWN: f32 = 5.;
 const MAX_NUMBER: usize = 1;
 

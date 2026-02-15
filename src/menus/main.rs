@@ -41,9 +41,13 @@ pub fn start_already(
     played_intro: Res<PlayedIntro>,
 ) {
     if resource_handles.is_all_done() {
+        #[allow(clippy::branches_sharing_code)]
         if played_intro.0 {
             next_screen.set(Screen::Gameplay);
         } else {
+            #[cfg(feature = "dev")]
+            next_screen.set(Screen::Gameplay);
+            #[cfg(not(feature = "dev"))]
             next_screen.set(Screen::Intro);
         }
     } else {

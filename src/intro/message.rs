@@ -25,15 +25,15 @@ impl Message {
     }
 }
 
-#[cfg(not(feature = "dev"))]
-const SHORT_MSG: f32 = 3.;
 #[cfg(feature = "dev")]
 const SHORT_MSG: f32 = 1.;
-
 #[cfg(not(feature = "dev"))]
-const LONG_MSG: f32 = 5.;
+const SHORT_MSG: f32 = 3.;
+
 #[cfg(feature = "dev")]
 const LONG_MSG: f32 = 2.;
+#[cfg(not(feature = "dev"))]
+const LONG_MSG: f32 = 5.;
 
 pub const MESSAGES: &[Message] = &[
     Message::new("Oh no", SHORT_MSG),
