@@ -1,13 +1,12 @@
-- Effect for when the player ate a cabbage
-- Boost button
-- Show that wolf is sleeping
-- Multiplayer
-- Getting eaten effect
 - Fix bleat overlapping
-- Sheep survival instinct
-- More fluid movement for wolf
-- Rotate wolf halo over time
-- Credits
-- Make player collision different
-- Make game progressively harder
 - Wolf spawn should avoid sheep, maybe offscreen
+- Make game progressively harder
+- Effect for when the player ate a cabbage
+- Show that wolf is sleeping
+- Rotate wolf halo over time
+- Getting eaten effect
+- Make player collision different
+- Sheep survival instinct
+- Boost button
+- More fluid movement for wolf
+- Multiplayer
