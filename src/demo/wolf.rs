@@ -5,13 +5,16 @@ use bevy::{
     prelude::*,
     sprite_render::Material2dPlugin,
 };
-use rand::{Rng, rng};
 
 use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
-    camera::{GAME_HEIGHT, GAME_WIDTH},
-    demo::{level::Level, movement::HumanMind, sheep::Sheep, wolf::halo::HaloMaterial},
+    demo::{
+        level::Level,
+        movement::HumanMind,
+        sheep::{Sheep, position_at_edge},
+        wolf::halo::HaloMaterial,
+    },
     screens::Screen,
 };
 
@@ -115,12 +118,8 @@ fn spawn(
         return;
     }
 
-    let mut rng = rng();
-
-    let position_x = rng.random_range((-GAME_WIDTH / 2. + 16.)..(GAME_WIDTH / 2. - 16.));
-    let position_y = rng.random_range((-GAME_HEIGHT / 2. + 16.)..(GAME_HEIGHT / 2. - 16.));
     let transform = Transform {
-        translation: Vec3::new(position_x, position_y, 0.),
+        translation: position_at_edge().0.extend(0.),
         scale: Vec2::splat(1.).extend(0.),
         ..Default::default()
     };

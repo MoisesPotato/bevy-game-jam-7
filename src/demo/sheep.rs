@@ -366,6 +366,21 @@ fn sheep_at_edge(
     texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
     level: Entity,
 ) -> impl Bundle {
+    let (pos, speed) = position_at_edge();
+
+    (
+        Transform {
+            translation: pos.extend(0.),
+            ..Default::default()
+        },
+        SheepAtEdge { speed },
+        sheep_base(player_assets, texture_atlas_layouts),
+        ChildOf(level),
+    )
+}
+
+/// Spot, speed to go back to the screen
+pub fn position_at_edge() -> (Vec2, Vec2) {
     let total_edge_len: f32 = 2. * (GAME_WIDTH + GAME_HEIGHT);
     let spawn_point: f32 = total_edge_len * rng().random::<f32>();
 
@@ -406,16 +421,7 @@ fn sheep_at_edge(
             Vec2::new(1., 0.),
         )
     };
-
-    (
-        Transform {
-            translation: pos.extend(0.),
-            ..Default::default()
-        },
-        SheepAtEdge { speed },
-        sheep_base(player_assets, texture_atlas_layouts),
-        ChildOf(level),
-    )
+    (pos, speed)
 }
 
 /// No transform, no mind, no screenwrap
