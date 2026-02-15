@@ -18,7 +18,7 @@ pub fn tick(time: Res<Time>, sheep: Query<&mut RecentBleat>) {
 }
 
 const PLAYER_BLEAT_DELAY_SECS: f32 = 1.;
-const SHEEP_BLEAT_DELAY_SECS: f32 = 2.;
+const SHEEP_BLEAT_DELAY_SECS: f32 = 3.;
 
 /// B for bleat
 pub fn with_b(
@@ -40,7 +40,7 @@ pub fn with_b(
     }
 }
 
-pub const TIME_TO_SPREAD_SECS: f32 = 0.3;
+pub const TIME_TO_SPREAD_SECS: f32 = 0.5;
 
 fn bleat(
     commands: &mut Commands,
@@ -52,7 +52,7 @@ fn bleat(
     let rng = &mut rand::rng();
     let random_bleat = assets.bleats.choose(rng).unwrap().clone();
     let sound_id = commands
-        .spawn((sound_effect(random_bleat, 0.4), BleatSound {}))
+        .spawn((sound_effect(random_bleat, 0.3), BleatSound {}))
         .id();
 
     recent
@@ -69,7 +69,7 @@ fn bleat(
         .spawn((
             Name::new("Bleat image"),
             BleatImage { sound_id },
-            Transform::from_translation(Vec3::new(SOUND_DIST, 0., 0.)),
+            Transform::from_translation(Vec3::new(SOUND_VISUAL_DIST, 0., 0.)),
             Sprite::from_image(assets.sound.clone()),
         ))
         .id();
@@ -90,7 +90,7 @@ pub fn despawn_image(
     }
 }
 
-pub const SOUND_DIST: f32 = 16.;
+pub const SOUND_VISUAL_DIST: f32 = 16.;
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
@@ -110,7 +110,7 @@ pub struct RecentBleat {
 }
 
 const RANGE: f32 = 100.;
-const BLEAT_SPREAD_CHANCE: f32 = 0.3;
+const BLEAT_SPREAD_CHANCE: f32 = 0.05;
 
 pub fn spread(
     mut commands: Commands,
@@ -147,8 +147,8 @@ pub fn spread(
     }
 }
 
-/// This runs per ship, per tenth of a second
-const SPONTANEOUS_CHANCE: f32 = 0.001;
+/// This runs per sheep, per tenth of a second
+const SPONTANEOUS_CHANCE: f32 = 0.0005;
 
 pub struct SheepTimer(Timer);
 

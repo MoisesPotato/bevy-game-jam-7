@@ -11,7 +11,7 @@ use crate::{
     AppSystems, PausableSystems,
     demo::{
         movement::HumanMind,
-        sheep::{self, SheepMind, bleat::BleatImage, bleat::SOUND_DIST},
+        sheep::{self, SheepMind, bleat::BleatImage, bleat::SOUND_VISUAL_DIST},
     },
 };
 
@@ -103,9 +103,9 @@ fn flip_bleat_sound(
         };
         sprite.flip_x = parent.flip_x;
         if parent.flip_x {
-            transf.translation.x = -SOUND_DIST;
+            transf.translation.x = -SOUND_VISUAL_DIST;
         } else {
-            transf.translation.x = SOUND_DIST;
+            transf.translation.x = SOUND_VISUAL_DIST;
         }
     }
 }
