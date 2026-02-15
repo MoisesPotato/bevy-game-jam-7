@@ -26,13 +26,17 @@ pub fn with_b(
     player_sheep: Query<(Entity, &mut RecentBleat), With<HumanMind>>,
     assets: Res<SheepAssets>,
     mut writer: MessageWriter<Resume>,
+    pause: Res<IntroPause>,
 ) {
     for (id, mut recent) in player_sheep {
         if !recent.time_to_bleat.is_finished() {
             continue;
         }
         bleat(&mut commands, &assets, id, &mut recent, true);
-        writer.write(Resume(IntroPause::WaitBleat));
+        if matches!(*pause, IntroPause::WaitBleat) {
+            info!("Managed to bleat");
+            writer.write(Resume(IntroPause::WaitBleat));
+        }
     }
 }
 

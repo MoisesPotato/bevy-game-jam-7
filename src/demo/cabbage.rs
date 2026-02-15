@@ -138,6 +138,7 @@ fn eat(
     sheep: Query<(&Transform, Option<&HumanMind>), With<Sheep>>,
     mut score: ResMut<Score>,
     mut writer: MessageWriter<Resume>,
+    pause: Res<IntroPause>,
 ) {
     for (id, transform) in cabbages {
         let position = transform.translation;
@@ -151,7 +152,10 @@ fn eat(
             }
 
             if mind.is_some() {
-                writer.write(Resume(IntroPause::WaitEat));
+                if matches!(*pause, IntroPause::WaitEat) {
+                    info!("Managed to eat");
+                    writer.write(Resume(IntroPause::WaitEat));
+                }
                 score.0 += 1;
             }
 

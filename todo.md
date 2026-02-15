@@ -11,3 +11,4 @@
 - Figure out what to do with setting menu
 - Credits
 - Make player collision different
+- Make game progressively harder

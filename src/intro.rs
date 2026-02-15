@@ -31,6 +31,7 @@ pub struct PlayedIntro(pub bool);
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 struct Intro {
+    paused: bool,
     time_to_next_message: Timer,
     displayed_messages: usize,
     next_pause: IntroPause,
@@ -84,6 +85,7 @@ fn spawn_intro(
         },
         DespawnOnExit(Screen::Intro),
         Intro {
+            paused: false,
             time_to_next_message: Timer::new(Duration::ZERO, TimerMode::Once),
             displayed_messages: 0,
             next_pause: IntroPause::WaitBleat,
@@ -98,6 +100,10 @@ fn advance_intro(
     old_messages: Query<Entity, With<IntroText>>,
     mut pause: ResMut<IntroPause>,
 ) {
+    if intro.1.paused {
+        return;
+    }
+
     intro.1.time_to_next_message.tick(time.delta());
 
     if !intro.1.time_to_next_message.just_finished() {
@@ -145,8 +151,15 @@ fn advance_intro(
             }
         }
         Message::Pause => {
+            info!(
+                msg = intro.1.displayed_messages,
+                next_pause = ?intro.1.next_pause,
+                "Hit a pause"
+            );
             *pause = intro.1.next_pause;
             intro.1.next_pause.cycle();
+            intro.1.paused = true;
+            info!(?pause);
             match *pause {
                 IntroPause::WaitBleat => {
                     commands.insert_resource(BleatEnabled);
@@ -175,15 +188,22 @@ pub struct CabbageEnabled;
 #[derive(Message)]
 pub struct Resume(pub IntroPause);
 
-fn resume(mut intro: Single<&mut Intro>, mut recv: MessageReader<Resume>, pause: Res<IntroPause>) {
+fn resume(
+    mut intro: Single<&mut Intro>,
+    mut recv: MessageReader<Resume>,
+    mut pause: ResMut<IntroPause>,
+) {
     for m in recv.read() {
         if m.0 != *pause {
             continue;
         }
+        info!(pause = ?*pause, "Resuming");
+        *pause = IntroPause::None;
         intro
             .time_to_next_message
             .set_duration(Duration::from_secs_f32(0.2));
         intro.time_to_next_message.reset();
         intro.displayed_messages += 1;
+        intro.paused = false;
     }
 }

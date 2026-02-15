@@ -56,8 +56,9 @@ pub fn plugin(app: &mut App) {
         (
             (collision, think, walk).chain(),
             ego::jump,
+            // Tick these so we don't have to wait
+            bleat::tick,
             (
-                bleat::tick,
                 bleat::spread,
                 bleat::despawn_image,
                 bleat::with_b.run_if(just_pressed(PlayerAction::Bleat)),
