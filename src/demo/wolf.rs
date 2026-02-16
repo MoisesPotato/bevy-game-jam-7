@@ -26,7 +26,7 @@ pub fn plugin(app: &mut App) {
     app.load_resource::<WolfAssets>();
     app.add_systems(
         Update,
-        (spawn, (think_eat, hunt).chain())
+        (spawn, (think_eat, hunt).chain(), rotate_halo, animate_halo)
             .in_set(AppSystems::Update)
             .in_set(PausableSystems)
             .run_if(in_state(Screen::Gameplay)),
@@ -52,7 +52,7 @@ impl FromWorld for WolfAssets {
                 None,
             )),
             halo_mesh: assets.add(Circle::new(1.).into()),
-            halo_mat: assets.add(HaloMaterial::new(assets.load("images/cabbage.png"))),
+            halo_mat: assets.add(HaloMaterial::new()),
         }
     }
 }
@@ -254,5 +254,26 @@ fn hunt(
         let target = (prey.translation - transform.translation).normalize_or_zero();
 
         transform.translation += target * speed(*elapsed) * time.delta_secs();
+    }
+}
+
+/// <https://bevy.org/examples/3d-rendering/animated-material/>
+fn animate_halo(
+    material_handles: Query<&MeshMaterial2d<HaloMaterial>>,
+    time: Res<Time>,
+    mut materials: ResMut<Assets<HaloMaterial>>,
+) {
+    for material_handle in material_handles.iter() {
+        if let Some(material) = materials.get_mut(material_handle) {
+            material.time += time.elapsed_secs();
+        }
+    }
+}
+
+fn rotate_halo(halo: Query<&mut Transform, With<MeshMaterial2d<HaloMaterial>>>, time: Res<Time>) {
+    let rot = Quat::from_rotation_z(1.5 * time.delta_secs());
+
+    for mut t in halo {
+        t.rotation = rot * t.rotation;
     }
 }

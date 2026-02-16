@@ -13,16 +13,15 @@ use crate::theme::palette::RESURRECT_PALETTE;
 pub struct HaloMaterial {
     #[uniform(0)]
     pub background_color: LinearRgba,
-    #[texture(1)]
-    #[sampler(2)]
-    pub color_texture: Option<Handle<Image>>,
+    #[uniform(1)]
+    pub time: f32,
 }
 
 impl HaloMaterial {
-    pub fn new(image: Handle<Image>) -> Self {
+    pub fn new() -> Self {
         Self {
             background_color: RESURRECT_PALETTE[35].into(),
-            color_texture: Some(image),
+            time: 0.,
         }
     }
 }

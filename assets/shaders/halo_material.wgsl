@@ -19,8 +19,7 @@
 // }
 
 @group(#{MATERIAL_BIND_GROUP}) @binding(0) var<uniform> bg_color: vec4<f32>;
-@group(#{MATERIAL_BIND_GROUP}) @binding(1) var base_color_texture: texture_2d<f32>;
-@group(#{MATERIAL_BIND_GROUP}) @binding(2) var base_color_sampler: sampler;
+@group(#{MATERIAL_BIND_GROUP}) @binding(1) var<uniform> time: f32;
 
 @fragment
 fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
@@ -30,7 +29,7 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     let x = mesh.uv.x;
     let y = mesh.uv.y;
     let angle = atan2(x - 0.5, y - 0.5);
-    let angle_adjust = sin(angle * 5.) + cos(angle * 3.) * 0.7 + sin(angle * 7.) * 0.4;
+    let angle_adjust = sin(angle * 5. + time / 10.) + cos(angle * 3. + time / 20.) * 0.7 + sin(angle * 7.) * 0.4;
     // return vec4(angle_adjust, 0., 0.,0.);
     let d_sq = 4. * ((x - 0.5) * (x - 0.5) + (y - 0.5) * (y - 0.5));
     var t = d_sq * (4 * sqrt(d_sq) - 1.3);
