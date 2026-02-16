@@ -7,6 +7,7 @@ use rand::{Rng, rng};
 use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
+    audio::sound_effect,
     camera::{GAME_HEIGHT, GAME_WIDTH},
     demo::{
         level::Level,
@@ -56,6 +57,7 @@ impl FromWorld for CabbageAssets {
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
+            bite: assets.load("audio/sound_effects/bite.ogg"),
         }
     }
 }
@@ -65,6 +67,8 @@ impl FromWorld for CabbageAssets {
 pub struct CabbageAssets {
     #[dependency]
     pub cabbage: Handle<Image>,
+    #[dependency]
+    pub bite: Handle<AudioSource>,
 }
 
 #[derive(Component, Reflect, Debug)]
@@ -143,6 +147,7 @@ fn eat(
     mut score: ResMut<Score>,
     mut writer: MessageWriter<Resume>,
     pause: Res<IntroPause>,
+    assets: Res<CabbageAssets>,
 ) {
     for (id, transform) in cabbages {
         let position = transform.translation;
@@ -160,6 +165,7 @@ fn eat(
                     info!("Managed to eat");
                     writer.write(Resume(IntroPause::WaitEat));
                 }
+                commands.spawn(sound_effect(assets.bite.clone(), 0.5));
                 score.0 += 1;
             }
 
