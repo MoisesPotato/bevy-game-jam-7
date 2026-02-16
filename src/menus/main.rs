@@ -9,8 +9,8 @@ use crate::{
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Menu::Main), spawn_main_menu);
-    #[cfg(feature = "dev")]
-    app.add_systems(OnEnter(Menu::Main), start_already);
+    // #[cfg(feature = "dev")]
+    // app.add_systems(OnEnter(Menu::Main), start_already);
 }
 
 fn spawn_main_menu(mut commands: Commands) {
@@ -21,6 +21,7 @@ fn spawn_main_menu(mut commands: Commands) {
         #[cfg(not(target_family = "wasm"))]
         children![
             widget::button("Play", enter_loading_or_gameplay_screen),
+            widget::button("Skip tutorial", skip_tutorial),
             widget::button("Controls", open_controls_menu),
             widget::button("Credits", open_credits_menu),
             widget::button("Exit", exit_app),
@@ -28,6 +29,7 @@ fn spawn_main_menu(mut commands: Commands) {
         #[cfg(target_family = "wasm")]
         children![
             widget::button("Play", enter_loading_or_gameplay_screen),
+            widget::button("Skip tutorial", skip_tutorial),
             widget::button("Controls", open_controls_menu),
             widget::button("Credits", open_credits_menu),
         ],
@@ -49,6 +51,18 @@ pub fn start_already(
             #[cfg(not(feature = "dev"))]
             next_screen.set(Screen::Intro);
         }
+    } else {
+        next_screen.set(Screen::Loading);
+    }
+}
+
+fn skip_tutorial(
+    _: On<Pointer<Click>>,
+    resource_handles: Res<ResourceHandles>,
+    mut next_screen: ResMut<NextState<Screen>>,
+) {
+    if resource_handles.is_all_done() {
+        next_screen.set(Screen::Gameplay);
     } else {
         next_screen.set(Screen::Loading);
     }

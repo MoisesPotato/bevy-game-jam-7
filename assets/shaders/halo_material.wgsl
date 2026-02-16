@@ -29,7 +29,7 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     let x = mesh.uv.x;
     let y = mesh.uv.y;
     let angle = atan2(x - 0.5, y - 0.5);
-    let angle_adjust = sin(angle * 5. + time.x / 10.) + cos(angle * 3. + time.x / 20.) * 0.7 + sin(angle * 7.) * 0.4;
+    let angle_adjust = sin(angle * 5. + time.x / 50.) + cos(angle * 3. + time.x / 100.) * 0.7 + sin(angle * 7.) * 0.4;
     // return vec4(angle_adjust, 0., 0.,0.);
     let d_sq = 4. * ((x - 0.5) * (x - 0.5) + (y - 0.5) * (y - 0.5));
     var t = d_sq * (4 * sqrt(d_sq) - 1.3);
@@ -37,7 +37,7 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     t = t + angle_adjust * t * 0.3;
     t = clamp(t, 0., 1.);
 
-    var s = clamp(4. * (t - 0.1) * (0.4 - t) + 0.1 * sin(angle * 4.), 0, 1) ;
+    var s = clamp(4. * (t - 0.1) * (0.4 - t) + 0.1 * sin(angle * 4. + time.x / 100.), 0, 1) ;
 
     return t * bg_color + s * red ;// + (1 - t - s) * black; 
 }
