@@ -1,5 +1,4 @@
 ? Fix bleat overlapping
-- Make game progressively harder
 - Effect for when the player ate a cabbage
 - Show that wolf is sleeping
 - Rotate wolf halo over time

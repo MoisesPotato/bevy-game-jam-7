@@ -12,7 +12,7 @@ use crate::{
     controls::PlayerInput,
     demo::{
         movement::HumanMind,
-        sheep::{Sheep, ego::ConfusionSpawner},
+        sheep::{Sheep, ego::ParticleSpawner},
     },
 };
 
@@ -38,7 +38,7 @@ pub fn choose(
         if human.is_some() {
             commands.spawn((
                 Transform::from_translation(pos.translation),
-                ConfusionSpawner::default(),
+                ParticleSpawner::default(),
             ));
         }
         count += 1;

@@ -8,10 +8,14 @@ use crate::{
     AppSystems, PausableSystems,
     asset_tracking::LoadResource,
     camera::{GAME_HEIGHT, GAME_WIDTH},
-    demo::{level::Level, movement::HumanMind, sheep::Sheep},
+    demo::{
+        level::Level,
+        movement::HumanMind,
+        sheep::{Sheep, ego::ParticleSpawner},
+    },
     intro::{CabbageEnabled, IntroPause, Resume},
     screens::Screen,
-    theme::palette::WHITE,
+    theme::palette::{LIGHT_GREEN, WHITE},
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -158,6 +162,11 @@ fn eat(
                 }
                 score.0 += 1;
             }
+
+            commands.spawn((
+                Transform::from_translation(transform.translation),
+                ParticleSpawner::new(LIGHT_GREEN, 1.5, 2, 0.5),
+            ));
 
             commands.entity(id).despawn();
             break;

@@ -7,7 +7,7 @@ use crate::{
     AppSystems, PausableSystems,
     demo::{movement::HumanMind, player, sheep::Sheep},
     screens::Screen,
-    theme::palette::RESURRECT_PALETTE,
+    theme::palette::RED,
 };
 
 pub fn plugin(app: &mut App) {
@@ -60,30 +60,46 @@ pub fn jump(
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
-pub struct ConfusionSpawner {
+pub struct ParticleSpawner {
     time_left: Timer,
     charges_left: u8,
+    color: Color,
+    frequency_factor: f32,
+    speed_factor: f32,
 }
 
-impl Default for ConfusionSpawner {
+impl Default for ParticleSpawner {
     fn default() -> Self {
         Self {
             time_left: Timer::from_seconds(0., TimerMode::Once),
             charges_left: 3,
+            color: RED,
+            frequency_factor: 1.,
+            speed_factor: 1.,
         }
     }
 }
 
-impl ConfusionSpawner {
+impl ParticleSpawner {
     fn n_particles() -> u8 {
         rng().random_range(2..=6)
+    }
+
+    pub fn new(color: Color, freq: f32, charges: u8, particle_speed: f32) -> Self {
+        Self {
+            color,
+            frequency_factor: freq,
+            charges_left: charges,
+            speed_factor: particle_speed,
+            ..Default::default()
+        }
     }
 }
 
 fn fire(
     mut commands: Commands,
     time: Res<Time>,
-    spawner: Query<(Entity, &Transform, &mut ConfusionSpawner)>,
+    spawner: Query<(Entity, &Transform, &mut ParticleSpawner)>,
 ) {
     let mut rng = rng();
     for (id, transf, mut spawner) in spawner {
@@ -92,17 +108,21 @@ fn fire(
             continue;
         }
 
-        for _ in 0..ConfusionSpawner::n_particles() {
+        for _ in 0..ParticleSpawner::n_particles() {
             commands.spawn((
                 Transform {
                     translation: Vec3::new(transf.translation.x, transf.translation.y, -0.5),
                     rotation: Quat::from_rotation_z(rng.random_range(0. ..2. * PI)),
-                    scale: Vec3::new(2., 2., 0.),
+                    scale: Vec3::new(3., 3., 0.),
                 },
-                Sprite::from_color(RESURRECT_PALETTE[14], Vec2::splat(1.)),
-                ConfusionParticle {
-                    lifetime: Timer::from_seconds(rng.random_range(0.2..0.8), TimerMode::Once),
-                    speed: rng.random_range(20. ..50.)
+                Sprite::from_color(spawner.color, Vec2::splat(1.)),
+                Particle {
+                    lifetime: Timer::from_seconds(
+                        spawner.frequency_factor * rng.random_range(0.2..0.8),
+                        TimerMode::Once,
+                    ),
+                    speed: spawner.speed_factor
+                        * rng.random_range(20. ..50.)
                         * Vec2::from_angle(rng.random_range(0. ..2. * PI)),
                     rotation_speed: rng.random_range(-1. ..1.),
                 },
@@ -124,7 +144,7 @@ fn fire(
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
-struct ConfusionParticle {
+struct Particle {
     lifetime: Timer,
     speed: Vec2,
     rotation_speed: f32,
@@ -133,7 +153,7 @@ struct ConfusionParticle {
 fn particle(
     mut commands: Commands,
     time: Res<Time>,
-    particle: Query<(Entity, &mut Transform, &mut ConfusionParticle)>,
+    particle: Query<(Entity, &mut Transform, &mut Particle)>,
 ) {
     for (id, mut t, mut particle) in particle {
         particle.lifetime.tick(time.delta());
