@@ -14,14 +14,14 @@ pub struct HaloMaterial {
     #[uniform(0)]
     pub background_color: LinearRgba,
     #[uniform(1)]
-    pub time: f32,
+    pub time: Vec4,
 }
 
 impl HaloMaterial {
     pub fn new() -> Self {
         Self {
             background_color: RESURRECT_PALETTE[35].into(),
-            time: 0.,
+            time: Vec4::splat(0.),
         }
     }
 }

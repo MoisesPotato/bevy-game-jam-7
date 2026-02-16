@@ -283,7 +283,7 @@ fn animate_halo(
 ) {
     for material_handle in material_handles.iter() {
         if let Some(material) = materials.get_mut(material_handle) {
-            material.time += time.elapsed_secs();
+            material.time.x += time.elapsed_secs();
         }
     }
 }
