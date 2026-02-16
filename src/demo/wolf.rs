@@ -45,7 +45,7 @@ impl FromWorld for WolfAssets {
                 },
             ),
             layout: assets.add(TextureAtlasLayout::from_grid(
-                UVec2::splat(16),
+                UVec2::splat(24),
                 2,
                 1,
                 None,
@@ -91,9 +91,9 @@ impl Default for Wolf {
 
 pub struct WolfSpawnStatus(Timer);
 
-// #[cfg(feature = "dev")]
-// const SECONDS_TO_SPAWN: f32 = 0.2;
-// #[cfg(not(feature = "dev"))]
+#[cfg(feature = "dev")]
+const SECONDS_TO_SPAWN: f32 = 0.2;
+#[cfg(not(feature = "dev"))]
 const SECONDS_TO_SPAWN: f32 = 5.;
 
 fn max_wolves(elapsed_secs: f32) -> usize {
@@ -143,7 +143,13 @@ fn spawn(
             Name::new("Wolf"),
             transform,
             Wolf::default(),
-            Sprite::from_image(assets.wolf.clone()),
+            Sprite::from_atlas_image(
+                assets.wolf.clone(),
+                TextureAtlas {
+                    layout: assets.layout.clone(),
+                    index: 0,
+                },
+            ),
             ChildOf(level),
         ))
         .with_child((
