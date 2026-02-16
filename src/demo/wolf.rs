@@ -24,13 +24,35 @@ pub fn plugin(app: &mut App) {
     app.init_asset::<HaloMaterial>();
     app.add_plugins(Material2dPlugin::<HaloMaterial>::default());
     app.load_resource::<WolfAssets>();
+    app.init_resource::<DifficultySecs>();
+
+    app.add_systems(OnEnter(Screen::Gameplay), reset_difficulty);
+
     app.add_systems(
         Update,
-        (spawn, (think_eat, hunt).chain(), rotate_halo, animate_halo)
+        (
+            spawn,
+            (think_eat, hunt).chain(),
+            rotate_halo,
+            animate_halo,
+            update_difficulty,
+        )
             .in_set(AppSystems::Update)
             .in_set(PausableSystems)
             .run_if(in_state(Screen::Gameplay)),
     );
+}
+
+#[derive(Resource, Reflect, Debug, Default)]
+#[reflect(Resource)]
+struct DifficultySecs(f32);
+
+fn reset_difficulty(mut dif: ResMut<DifficultySecs>) {
+    dif.0 = 0.;
+}
+
+fn update_difficulty(time: Res<Time>, mut dif: ResMut<DifficultySecs>) {
+    dif.0 += time.delta_secs();
 }
 
 impl FromWorld for WolfAssets {
@@ -113,9 +135,8 @@ fn spawn(
     level: Query<Entity, With<Level>>,
     wolves: Query<(), With<Wolf>>,
     assets: If<Res<WolfAssets>>,
-    mut elapsed: Local<f32>,
+    dif: Res<DifficultySecs>,
 ) {
-    *elapsed += time.delta_secs();
     let Some(level) = level.iter().next() else {
         return;
     };
@@ -128,7 +149,7 @@ fn spawn(
 
     let count_wolves = wolves.count();
 
-    if count_wolves >= max_wolves(*elapsed) {
+    if count_wolves >= max_wolves(dif.0) {
         return;
     }
 
@@ -179,9 +200,8 @@ fn think_eat(
     wolf: Query<(&Transform, &mut Wolf, &mut Sprite)>,
     sheep: Query<(Entity, &Transform, Option<&HumanMind>), With<Sheep>>,
     mut next_screen: ResMut<NextState<Screen>>,
-    mut elapsed: Local<f32>,
+    dif: Res<DifficultySecs>,
 ) {
-    *elapsed += time.delta_secs();
     for (transf, mut wolf, mut sprite) in wolf {
         wolf.time_left.tick(time.delta());
 
@@ -203,7 +223,7 @@ fn think_eat(
             commands.entity(id).despawn();
             wolf.prey = None;
             wolf.time_left
-                .set_duration(Duration::from_secs_f32(sleep_time(*elapsed)));
+                .set_duration(Duration::from_secs_f32(sleep_time(dif.0)));
             wolf.time_left.reset();
             if let Some(atlas) = sprite.texture_atlas.as_mut() {
                 atlas.index = 1;
@@ -239,10 +259,8 @@ fn hunt(
     time: Res<Time>,
     wolf: Query<(&mut Transform, &mut Wolf)>,
     sheep: Query<&Transform, Without<Wolf>>,
-    mut elapsed: Local<f32>,
+    dif: Res<DifficultySecs>,
 ) {
-    *elapsed += time.delta_secs();
-
     for (mut transform, mut think) in wolf {
         let Some(prey) = think.prey else {
             continue;
@@ -253,7 +271,7 @@ fn hunt(
         };
         let target = (prey.translation - transform.translation).normalize_or_zero();
 
-        transform.translation += target * speed(*elapsed) * time.delta_secs();
+        transform.translation += target * speed(dif.0) * time.delta_secs();
     }
 }
 

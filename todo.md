@@ -1,5 +1,4 @@
 ? Fix bleat overlapping
-- Rotate wolf halo over time
 - Prettier grass
 - Getting eaten effect
 - Make player collision different
