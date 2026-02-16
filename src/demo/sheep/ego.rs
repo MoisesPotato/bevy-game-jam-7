@@ -18,6 +18,13 @@ pub fn plugin(app: &mut App) {
             .in_set(PausableSystems)
             .run_if(in_state(Screen::Gameplay)),
     );
+    app.add_systems(
+        Update,
+        (fire, particle)
+            .in_set(AppSystems::Update)
+            .in_set(PausableSystems)
+            .run_if(in_state(Screen::Intro)),
+    );
 }
 
 pub struct JumpTimer(Timer);
