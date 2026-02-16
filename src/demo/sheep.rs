@@ -5,7 +5,7 @@ use std::{
     time::Duration,
 };
 
-use bevy::{prelude::*, time::common_conditions::on_timer};
+use bevy::prelude::*;
 use rand::{Rng, rng};
 
 use crate::{
@@ -41,10 +41,7 @@ pub fn plugin(app: &mut App) {
             bleat::with_b.run_if(just_pressed(PlayerAction::Bleat)),
             ego::jump,
             move_from_edge,
-            respawn_dead.run_if(on_timer(Duration::from_secs_f32(
-                // Hopefully it doesn't align with other lol
-                1.62,
-            ))),
+            respawn_dead,
         )
             .in_set(AppSystems::Update)
             .in_set(PausableSystems)
