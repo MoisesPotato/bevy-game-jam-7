@@ -176,13 +176,13 @@ const EAT_RANGE: f32 = 16.;
 fn think_eat(
     mut commands: Commands,
     time: Res<Time>,
-    wolf: Query<(&Transform, &mut Wolf)>,
+    wolf: Query<(&Transform, &mut Wolf, &mut Sprite)>,
     sheep: Query<(Entity, &Transform, Option<&HumanMind>), With<Sheep>>,
     mut next_screen: ResMut<NextState<Screen>>,
     mut elapsed: Local<f32>,
 ) {
     *elapsed += time.delta_secs();
-    for (transf, mut wolf) in wolf {
+    for (transf, mut wolf, mut sprite) in wolf {
         wolf.time_left.tick(time.delta());
 
         let pos = transf.translation.xy();
@@ -205,13 +205,22 @@ fn think_eat(
             wolf.time_left
                 .set_duration(Duration::from_secs_f32(sleep_time(*elapsed)));
             wolf.time_left.reset();
+            if let Some(atlas) = sprite.texture_atlas.as_mut() {
+                atlas.index = 1;
+            } else {
+                error!("No atlas in wolf?");
+            }
             if human {
                 next_screen.set(Screen::GameOver);
             }
         } else if wolf.time_left.just_finished() {
             wolf.time_left
                 .set_duration(Duration::from_secs_f32(THINK_INTERVAL_HUNGRY));
-            // Consider making it the sheep id
+            if let Some(atlas) = sprite.texture_atlas.as_mut() {
+                atlas.index = 0;
+            } else {
+                error!("No atlas in wolf?");
+            }
             wolf.prey = Some(id);
         }
     }

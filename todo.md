@@ -1,5 +1,4 @@
 ? Fix bleat overlapping
-- Show that wolf is sleeping
 - Rotate wolf halo over time
 - Prettier grass
 - Getting eaten effect
