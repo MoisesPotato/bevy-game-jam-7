@@ -225,7 +225,6 @@ fn reset_and_start(
     mut commands: Commands,
     // level_assets: Res<LevelAssets>,
     player_assets: Res<PlayerAssets>,
-    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     level: Single<Entity, With<Level>>,
     sheep: Query<(), With<Sheep>>,
     cabbage: Query<Entity, With<Cabbage>>,
@@ -233,10 +232,7 @@ fn reset_and_start(
 ) {
     let sheep = sheep.count();
     for _ in sheep..N_SHEEP {
-        commands.spawn((
-            new_sheep(&player_assets, &mut texture_atlas_layouts, Screen::Gameplay),
-            ChildOf(*level),
-        ));
+        commands.spawn((new_sheep(&player_assets, Screen::Gameplay), ChildOf(*level)));
     }
 
     for id in cabbage {

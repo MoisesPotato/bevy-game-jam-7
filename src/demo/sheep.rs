@@ -175,11 +175,7 @@ impl SheepMind {
 }
 
 /// No transform, no screenwrap
-pub fn new_sheep(
-    player_assets: &PlayerAssets,
-    texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
-    state: Screen,
-) -> impl Bundle {
+pub fn new_sheep(player_assets: &PlayerAssets, state: Screen) -> impl Bundle {
     let mut rng = rng();
 
     let angle = 2. * PI * rng.random::<f32>();
@@ -192,7 +188,7 @@ pub fn new_sheep(
     };
 
     (
-        sheep_base(player_assets, texture_atlas_layouts),
+        sheep_base(player_assets),
         SheepMind::new_idle(),
         Transform {
             translation: pos.extend(0.),
@@ -333,7 +329,6 @@ fn respawn_dead(
     level: Query<Entity, With<Level>>,
     query: Query<(), With<Sheep>>,
     player_assets: Res<PlayerAssets>,
-    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let count = query.count();
 
@@ -346,11 +341,7 @@ fn respawn_dead(
         return;
     };
 
-    commands.spawn(sheep_at_edge(
-        &player_assets,
-        &mut texture_atlas_layouts,
-        level,
-    ));
+    commands.spawn(sheep_at_edge(&player_assets, level));
 }
 
 #[derive(Component, Reflect, Debug)]
@@ -361,11 +352,7 @@ struct SheepAtEdge {
 
 const DIST_FROM_EDGE: f32 = 20.;
 
-fn sheep_at_edge(
-    player_assets: &PlayerAssets,
-    texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
-    level: Entity,
-) -> impl Bundle {
+fn sheep_at_edge(player_assets: &PlayerAssets, level: Entity) -> impl Bundle {
     let (pos, speed) = position_at_edge();
 
     (
@@ -374,7 +361,7 @@ fn sheep_at_edge(
             ..Default::default()
         },
         SheepAtEdge { speed },
-        sheep_base(player_assets, texture_atlas_layouts),
+        sheep_base(player_assets),
         ChildOf(level),
     )
 }
@@ -425,12 +412,7 @@ pub fn position_at_edge() -> (Vec2, Vec2) {
 }
 
 /// No transform, no mind, no screenwrap
-fn sheep_base(
-    player_assets: &PlayerAssets,
-    texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
-) -> impl Bundle {
-    let layout = TextureAtlasLayout::from_grid(UVec2::splat(16), 7, 1, None, None);
-    let texture_atlas_layout = texture_atlas_layouts.add(layout);
+fn sheep_base(player_assets: &PlayerAssets) -> impl Bundle {
     let player_animation = SheepAnimation::new();
 
     (
@@ -448,7 +430,7 @@ fn sheep_base(
         Sprite::from_atlas_image(
             player_assets.sheep.clone(),
             TextureAtlas {
-                layout: texture_atlas_layout,
+                layout: player_assets.layout.clone(),
                 index: player_animation.get_atlas_index(),
             },
         ),

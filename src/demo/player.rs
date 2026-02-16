@@ -93,11 +93,14 @@ fn record_player_directional_input(
 pub struct PlayerAssets {
     #[dependency]
     pub sheep: Handle<Image>,
+    #[dependency]
+    pub layout: Handle<TextureAtlasLayout>,
 }
 
 impl FromWorld for PlayerAssets {
     fn from_world(world: &mut World) -> Self {
         let assets = world.resource::<AssetServer>();
+        let layout = TextureAtlasLayout::from_grid(UVec2::splat(16), 7, 1, None, None);
         Self {
             sheep: assets.load_with_settings(
                 "images/sheep.png",
@@ -106,6 +109,7 @@ impl FromWorld for PlayerAssets {
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
+            layout: assets.add(layout),
         }
     }
 }

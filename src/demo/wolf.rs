@@ -44,6 +44,13 @@ impl FromWorld for WolfAssets {
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
+            layout: assets.add(TextureAtlasLayout::from_grid(
+                UVec2::splat(16),
+                2,
+                1,
+                None,
+                None,
+            )),
             halo_mesh: assets.add(Circle::new(1.).into()),
             halo_mat: assets.add(HaloMaterial::new(assets.load("images/cabbage.png"))),
         }
@@ -55,6 +62,8 @@ impl FromWorld for WolfAssets {
 pub struct WolfAssets {
     #[dependency]
     pub wolf: Handle<Image>,
+    #[dependency]
+    pub layout: Handle<TextureAtlasLayout>,
     #[dependency]
     pub halo_mesh: Handle<Mesh>,
     #[dependency]

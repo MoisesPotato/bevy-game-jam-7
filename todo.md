@@ -1,7 +1,7 @@
 ? Fix bleat overlapping
-- Effect for when the player ate a cabbage
 - Show that wolf is sleeping
 - Rotate wolf halo over time
+- Prettier grass
 - Getting eaten effect
 - Make player collision different
 - Sheep survival instinct

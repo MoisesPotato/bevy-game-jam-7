@@ -44,20 +44,13 @@ pub fn spawn_level(
     level_assets: Res<LevelAssets>,
     state: Res<State<Screen>>,
     player_assets: Res<PlayerAssets>,
-    texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     level: Query<(), With<Level>>,
 ) {
     if level.count() > 0 {
         info!("Level is already spawned");
         return;
     }
-    spawn_level_function(
-        commands,
-        level_assets,
-        player_assets,
-        texture_atlas_layouts,
-        **state,
-    );
+    spawn_level_function(commands, level_assets, player_assets, **state);
 }
 
 /// A system that spawns the main level.
@@ -65,7 +58,6 @@ pub fn spawn_level_function(
     mut commands: Commands,
     level_assets: Res<LevelAssets>,
     player_assets: Res<PlayerAssets>,
-    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     state: Screen,
 ) {
     let level = commands
@@ -100,10 +92,7 @@ pub fn spawn_level_function(
         }
     };
     for _ in 0..max_sheep {
-        commands.spawn((
-            new_sheep(&player_assets, &mut texture_atlas_layouts, state),
-            ChildOf(level),
-        ));
+        commands.spawn((new_sheep(&player_assets, state), ChildOf(level)));
     }
 
     spawn_score(&mut commands, level);
