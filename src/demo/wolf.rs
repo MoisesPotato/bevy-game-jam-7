@@ -281,7 +281,7 @@ fn animate_halo(
     time: Res<Time>,
     mut materials: ResMut<Assets<HaloMaterial>>,
 ) {
-    for material_handle in material_handles.iter() {
+    for material_handle in material_handles.iter().take(1) {
         if let Some(material) = materials.get_mut(material_handle) {
             material.time.x += time.elapsed_secs();
         }
